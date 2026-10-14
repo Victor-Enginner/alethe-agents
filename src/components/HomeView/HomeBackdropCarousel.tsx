@@ -1,12 +1,12 @@
 import { type CSSProperties, useEffect, useState } from 'react'
 
 import { AsciiEffect } from '../ui/ascii-effect'
-import { ASCII_FADE_MS, ASCII_RECIPES, ASCII_SLIDE_MS, type AsciiRecipe } from './asciiRecipes'
+import { ASCII_FADE_MS, ASCII_SLIDE_MS, ASCII_SLIDES, type AsciiSlide } from './asciiRecipes'
 import styles from './HomeBackdropCarousel.module.css'
 
 interface Props {
   reducedMotion: boolean
-  recipes?: AsciiRecipe[]
+  recipes?: AsciiSlide[]
 }
 
 /**
@@ -14,7 +14,7 @@ interface Props {
  * Só o slide atual e o anterior (durante o fade) ficam montados, então só um ou dois
  * canvases animam por vez. Com movimento reduzido, fica parado no primeiro.
  */
-export function HomeBackdropCarousel({ reducedMotion, recipes = ASCII_RECIPES }: Props) {
+export function HomeBackdropCarousel({ reducedMotion, recipes = ASCII_SLIDES }: Props) {
   const [index, setIndex] = useState(0)
   const [previous, setPrevious] = useState<number | null>(null)
 
@@ -58,15 +58,27 @@ export function HomeBackdropCarousel({ reducedMotion, recipes = ASCII_RECIPES }:
               } as CSSProperties
             }
           >
-            <AsciiEffect
-              imageSrc={recipe.image}
-              alt=""
-              fit="cover"
-              scale={1}
-              backgroundColor="transparent"
-              reducedMotion={reducedMotion}
-              {...recipe.effect}
-            />
+            {recipe.kind === 'video' ? (
+              <video
+                className={styles.video}
+                src={recipe.src}
+                poster={recipe.poster || undefined}
+                autoPlay={!reducedMotion}
+                loop
+                muted
+                playsInline
+              />
+            ) : (
+              <AsciiEffect
+                imageSrc={recipe.image}
+                alt=""
+                fit="cover"
+                scale={1}
+                backgroundColor="transparent"
+                reducedMotion={reducedMotion}
+                {...recipe.effect}
+              />
+            )}
             {bloom > 0 && <div className={styles.bloom} />}
             {tint && <div className={styles.tint} />}
             {grain > 0 && <div className={styles.grain} />}
