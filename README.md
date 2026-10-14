@@ -117,6 +117,19 @@ Registro de tudo que muda em relação ao original. Cada mudança entra aqui e n
 
 ## Roadmap
 
+Plano de 12 meses, com trabalho diário: da fundação a uma UI multiagente própria e, depois, uma DAW com agentes.
+Detalhes em **[docs/fork/ROADMAP.md](./docs/fork/ROADMAP.md)**. Diário, decisões e marcos (pontos salvos) em **[docs/fork/](./docs/fork/README.md)**.
+
+| Fase | Período | Foco |
+|---|---|---|
+| 0 ✅ | out/2026 | Fundação: fork rodando, docs, marco 0, carrossel ASCII |
+| 1 | meses 1-2 | Dominar o código |
+| 2 | meses 2-4 | Identidade própria: nome, logo, tema |
+| 3 | meses 4-8 | Multiagente de verdade e performance |
+| 4 | meses 8-12 | Rumo à DAW |
+
+Pendências pequenas:
+
 - [ ] Capturas de tela deste fork rodando no Windows
 - [x] Carrossel ASCII no fundo da home: 4 artes, incluindo Van Gogh
 - [ ] Mais mudanças de interface (a definir)
