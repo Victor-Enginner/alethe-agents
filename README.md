@@ -110,8 +110,8 @@ Registro de tudo que muda em relação ao original. Cada mudança entra aqui e n
 
 | Data | Mudança | Commit |
 |---|---|---|
-| 14/10/2026 | Fork criado; README novo em português; README original preservado em `README.upstream.md` | — |
-| 14/10/2026 | Plugins Tauri do npm alinhados com o Rust (problema #1) | — |
+| 14/10/2026 | Fork criado; README novo em português; README original preservado em `README.upstream.md` | `0c4affb` |
+| 14/10/2026 | Plugins Tauri do npm alinhados com o Rust (problema #1) | `ee95291` |
 
 ## Roadmap
 
