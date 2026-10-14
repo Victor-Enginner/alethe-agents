@@ -5,7 +5,9 @@ import styles from './AsciiEffect.module.css'
 export interface AsciiEffectProps extends Omit<HTMLAttributes<HTMLDivElement>, 'color'> {
   imageSrc: string
   alt?: string
-  variant?: 'image' | 'flow' | 'glitch'
+  variant?: 'image' | 'flow' | 'glitch' | 'shimmer'
+  /** characters: um glifo por célula; mosaic: bloco por célula; dots: ponto de halftone. Tamanho segue o brilho */
+  renderMode?: 'characters' | 'mosaic' | 'dots'
   chars?: string
   fontSize?: number
   fontFamily?: string
@@ -34,6 +36,10 @@ export interface AsciiEffectProps extends Omit<HTMLAttributes<HTMLDivElement>, '
   glitchIntensity?: number
   glitchFrequency?: number
   revealDuration?: number
+  /** shimmer: 0-1, quanto o brilho de cada célula oscila */
+  shimmerIntensity?: number
+  /** shimmer: velocidade da oscilação (1 = padrão) */
+  shimmerSpeed?: number
   frameRate?: number
   reducedMotion?: boolean
 }
@@ -84,6 +90,7 @@ export function AsciiEffect({
   imageSrc,
   alt = 'ASCII rendering',
   variant = 'image',
+  renderMode = 'characters',
   chars = ' .:-=+*#%@',
   fontSize = 9,
   fontFamily = 'Arial, Helvetica, sans-serif',
@@ -112,6 +119,8 @@ export function AsciiEffect({
   glitchIntensity = 0.65,
   glitchFrequency = 1.4,
   revealDuration = 1400,
+  shimmerIntensity = 0.6,
+  shimmerSpeed = 1,
   frameRate = 30,
   reducedMotion = false,
   className,
@@ -308,14 +317,49 @@ export function AsciiEffect({
           const sampledRow = Math.round(clamp(sourceRow, 0, rows - 1))
           const sampleIndex = sampledRow * columns + sampledColumn
           const pixel = sampleIndex * 4
-          const value = invert ? 1 - clamp(luminance[sampleIndex]) : clamp(luminance[sampleIndex])
-          const character =
-            chars[Math.min(chars.length - 1, Math.floor(value * (chars.length - 1)))]
-          if (!character?.trim()) continue
-          context.fillStyle =
+          let value = invert ? 1 - clamp(luminance[sampleIndex]) : clamp(luminance[sampleIndex])
+          if (variant === 'shimmer' && !motionReduced && shimmerIntensity > 0) {
+            // fase pseudoaleatória fixa por célula: cada caractere "cintila" no seu ritmo
+            const seed = Math.sin(row * 12.9898 + column * 78.233) * 43758.5453
+            const phase = (seed - Math.floor(seed)) * Math.PI * 2
+            const wave = 0.5 + 0.5 * Math.sin(now * 0.004 * shimmerSpeed + phase)
+            value = clamp(value * (1 - clamp(shimmerIntensity) * 0.6 * wave))
+          }
+          const fill =
             colorMode === 'source'
               ? `rgb(${pixels[pixel]}, ${pixels[pixel + 1]}, ${pixels[pixel + 2]})`
               : gradientColor(resolvedColors, value)
+          if (renderMode === 'mosaic') {
+            if (value < 0.04) continue
+            const size = Math.max(1, Math.min(cellWidth, cellHeight) * (0.35 + 0.6 * value))
+            context.fillStyle = fill
+            context.fillRect(
+              column * cellWidth - cellWidth + (cellWidth - size) / 2 + (glitchBands.get(row) ?? 0),
+              row * cellHeight - cellHeight + (cellHeight - size) / 2,
+              size,
+              size,
+            )
+            continue
+          }
+          if (renderMode === 'dots') {
+            if (value < 0.04) continue
+            const radius = (Math.min(cellWidth, cellHeight) / 2) * (0.2 + 0.8 * value)
+            context.fillStyle = fill
+            context.beginPath()
+            context.arc(
+              column * cellWidth - cellWidth / 2 + (glitchBands.get(row) ?? 0),
+              row * cellHeight - cellHeight / 2,
+              radius,
+              0,
+              Math.PI * 2,
+            )
+            context.fill()
+            continue
+          }
+          const character =
+            chars[Math.min(chars.length - 1, Math.floor(value * (chars.length - 1)))]
+          if (!character?.trim()) continue
+          context.fillStyle = fill
           context.fillText(
             character,
             column * cellWidth - cellWidth + (glitchBands.get(row) ?? 0),
@@ -459,8 +503,11 @@ export function AsciiEffect({
     mouseWaveSpeed,
     posterize,
     reducedMotion,
+    renderMode,
     revealDuration,
     scale,
+    shimmerIntensity,
+    shimmerSpeed,
     threshold,
     variant,
   ])

@@ -112,11 +112,15 @@ Registro de tudo que muda em relação ao original. Cada mudança entra aqui e n
 |---|---|---|
 | 14/10/2026 | Fork criado; README novo em português; README original preservado em `README.upstream.md` | `0c4affb` |
 | 14/10/2026 | Plugins Tauri do npm alinhados com o Rust (problema #1) | `ee95291` |
+| 14/10/2026 | **Fundo da home em carrossel de receitas ASCII** (adaptadas do [21st.dev](https://21st.dev/community/ascii)): Robot + Human, Mosaic e Vapor Halftone, com troca a cada 12 s e cross-fade. O motor `ascii-effect` ganhou a animação `shimmer` e os modos `mosaic` (blocos) e `dots` (halftone); vinheta, grão, bloom e tint são camadas CSS. Receitas em `src/components/HomeView/asciiRecipes.ts` | *este commit* |
 
 ## Roadmap
 
 - [ ] Capturas de tela deste fork rodando no Windows
-- [ ] Mudanças de interface (a definir)
+- [x] Carrossel ASCII no fundo da home (3 de 4 receitas)
+- [ ] 4ª receita ASCII
+- [ ] Fotos de origem próprias para cada receita (hoje todas usam `home-bg-right.png` de forma provisória)
+- [ ] Mais mudanças de interface (a definir)
 - [ ] Nome e identidade visual próprios (exigência da política de marca do original para versões modificadas)
 
 ## Sincronizar com o original

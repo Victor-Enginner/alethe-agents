@@ -1,0 +1,100 @@
+.carousel {
+  position: absolute;
+  inset: 0;
+}
+
+.slide {
+  position: absolute;
+  inset: 0;
+}
+
+.slide > * {
+  position: absolute;
+  inset: 0;
+}
+
+.entering {
+  animation: fadeIn var(--fade-ms) ease both;
+}
+
+.leaving {
+  animation: fadeOut var(--fade-ms) ease both;
+}
+
+/* bloom: cópia borrada e clareada do canvas por cima, em screen */
+.bloom {
+  pointer-events: none;
+  backdrop-filter: blur(6px) brightness(1.4);
+  mix-blend-mode: screen;
+  opacity: var(--bloom);
+}
+
+.tint {
+  pointer-events: none;
+  background: var(--tint);
+  mix-blend-mode: soft-light;
+  opacity: var(--tint-opacity);
+}
+
+/* grão de filme: ruído SVG em loop curto */
+.grain {
+  pointer-events: none;
+  inset: -50% !important;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: calc(var(--grain) * 0.35);
+  mix-blend-mode: overlay;
+  animation: grain 0.8s steps(4) infinite;
+}
+
+.vignette {
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 35%,
+    color-mix(in srgb, var(--bg, #000) calc(var(--vignette) * 100%), transparent) 100%
+  );
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes grain {
+  0% {
+    transform: translate(0, 0);
+  }
+  25% {
+    transform: translate(-6%, 4%);
+  }
+  50% {
+    transform: translate(5%, -7%);
+  }
+  75% {
+    transform: translate(-3%, 8%);
+  }
+  100% {
+    transform: translate(0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .entering,
+  .leaving,
+  .grain {
+    animation: none;
+  }
+}

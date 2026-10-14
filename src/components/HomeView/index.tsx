@@ -28,11 +28,10 @@ import { useUiStore } from '../../stores/uiStore'
 import { resolveUnrestrictedFlag } from '../../lib/agentProviders'
 import type { AgentType, BuiltinAgentType, Project } from '../../lib/types'
 import { AgentIcon } from '../icons/AgentIcons'
-import { AsciiEffect } from '../ui/ascii-effect'
 import { Avatar } from '../ui/Avatar'
 import { EmptyState } from '../EmptyState'
-import homeBackground from '../../assets/home-bg-right.png'
 import { computeStreak } from './ActivityGraph'
+import { HomeBackdropCarousel } from './HomeBackdropCarousel'
 import { NowPlayingWidget } from './NowPlayingWidget'
 import { SetupWalkthrough } from './SetupWalkthrough'
 import { UsageStrip } from './UsageStrip'
@@ -263,24 +262,7 @@ export function HomeView() {
   return (
     <section className={styles.home}>
       <div className={styles.homeBackdrop} aria-hidden="true">
-        <AsciiEffect
-          imageSrc={homeBackground}
-          alt=""
-          variant="flow"
-          fontSize={8}
-          reducedMotion={preferences.motionPreference === 'reduced'}
-          brightnessBoost={2.25}
-          contrast={1.15}
-          threshold={0.02}
-          flowSpeed={0.16}
-          flowStrength={9}
-          mouseRadius={260}
-          mouseStrength={16}
-          scale={1}
-          fit="cover"
-          colors={['var(--fg-muted)', 'var(--fg)']}
-          backgroundColor="transparent"
-        />
+        <HomeBackdropCarousel reducedMotion={preferences.motionPreference === 'reduced'} />
       </div>
       <section className={styles.heroStage}>
         <div className={styles.identity}>
