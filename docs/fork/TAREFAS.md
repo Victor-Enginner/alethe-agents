@@ -62,7 +62,7 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 
 ### Sprint 1.5 — Agentes no Alethe
 - [x] Antigravity CLI (`agy`) instalado — ok 15/10
-- [ ] Cadastrar `agy` como agente personalizado (Configurações → Terminal e agentes)
+- [x] `agy` cadastrado como agente personalizado — ok 15/10
 - [ ] Cadastrar `freebuff` (conta paga) como agente personalizado
 - [ ] OpenCode com o 9router ligado: usar o combo `alethe-rapido` dentro do Alethe
 - [ ] Confirmar que Claude Code e Codex abertos **sem** 9router seguem na assinatura direta
@@ -78,7 +78,7 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 - [ ] Medir RAM/CPU: app parado, 3 agentes, 10 agentes
 
 ### Sprint 1.7 — Primeira orquestração real 🎯
-- [ ] Escolher o 1º projeto de teste (pequeno, com resultado visível)
+- [x] 1º projeto de teste: **Biblioteca arXiv offline** (`PROJETOS/biblioteca-arxiv`) — ok 15/10
 - [ ] Configurar os papéis do orquestrador (Configurações → Orquestração) apontando para os combos
 - [ ] Rodar: planejador delega para scout/builder, revisar o resultado e o diff
 - [ ] Registrar: tempo, tokens, qual modelo fez o quê, o que falhou
@@ -92,6 +92,7 @@ Desenho completo em [ARQUITETURA.md §10](./ARQUITETURA.md#10-hermes-e-openclaw-
 
 ### Sprint 2.1 — Docker e ponte segura
 - [x] Docker Desktop instalado (29.8.2, WSL2, Ubuntu 24.04) — já existia, conferido 15/10
+- [x] Tailscale instalado (PC = 100.117.35.70), sem serve/funnel — ok 15/10
 - [ ] Ligar o Docker Desktop e rodar um container de teste
 - [ ] 🧪 Ponte opção 0: container alcança `host.docker.internal:41010`?
 - [ ] Se não: ponte opção 1 (proxy na interface do Docker + regra de firewall)
