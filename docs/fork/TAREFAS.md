@@ -29,7 +29,9 @@ Cada sessão termina com: diário atualizado, commit + push. O "DIA XX/100" da s
 - [x] Levantamento de segurança do 9router (senha padrão, porta, chaves) — ok 15/10
 - [x] Corrigir o 9router subindo exposto na rede; agora só 127.0.0.1:41010 (ver `seguranca/`) — ok 15/10
 - [ ] ⛔ Push da correção: aguardando aviso privado ao autor. E-mail pronto em [`seguranca/EMAIL-AUTOR-9router.md`](./seguranca/EMAIL-AUTOR-9router.md)
-- [ ] 🔄 Endurecer: senha própria, conferir requireLogin/requireApiKey, chave por cliente
+- [x] Senha própria no 9router (gravada com hash; conferido no banco) — ok 15/10
+- [x] Travas nos padrões seguros: requireLogin e requireApiKey ligados, nenhum túnel ativo — ok 15/10
+- [ ] 🔄 Chave de API por cliente ("alethe") colada no Alethe
 - [ ] Ligar Claude Code e Codex passando pelo 9router; ver o uso na topbar
 - [ ] Conectar Ollama local (modelos em `O:\data\ollama`) como provedor no 9router
 - [ ] Medir RAM/CPU: app parado, 3 agentes, 10 agentes (tabela no PROVEDORES.md)
