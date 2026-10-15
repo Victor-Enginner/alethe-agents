@@ -11,3 +11,4 @@ Ao pagar uma dívida: marcar `[x]` com a data e o commit.
 | DT-04 | [ ] Slides com nomes genéricos (`slide-a/b/c`) | Difícil saber qual arte é qual | `src/assets/home-bg/` | 14/10 |
 | DT-05 | [ ] Sem teste do `HomeBackdropCarousel` | Troca de slide e cross-fade sem cobertura | `src/components/HomeView/` | 14/10 |
 | DT-06 | [ ] 3 gateways no PC (9router, OmniRoute?, LiteLLM) | Redundância, portas e chaves em vários lugares | ver PROVEDORES.md | 15/10 |
+| DT-07 | [ ] 20 chaves de API escritas no `A JORNADA/tools/litellm/config.yaml`, rastreado pelo Git (repositório só local, sem remoto) | Se um dia ganhar remoto, as chaves vazam. Mover para `.env` fora do Git e usar `os.environ/` no config | `A JORNADA/tools/litellm/` | 15/10 |

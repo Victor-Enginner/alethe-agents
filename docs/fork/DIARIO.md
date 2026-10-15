@@ -5,6 +5,26 @@ As mais recentes ficam no topo.
 
 ---
 
+## 15/10/2026 (madrugada) — Dia 3: provedores, segurança e plano dos próximos projetos
+
+**Feito**
+- 9router instalado e **endurecido**: porta 41010, só no PC, senha própria, chave obrigatória.
+- **Bug de segurança** encontrado e corrigido no fork: o 9router subia aberto na rede (0.0.0.0:20128).
+  Teste unitário + verificação real. Push suspenso até avisar o autor (e-mail pronto).
+- Provedores: 7 conexões funcionando (Claude, Codex, Antigravity, GitHub Copilot, Gemini AI Studio,
+  Groq, OpenRouter grátis); 5 com falha removidas. Combos `alethe-topo`, `alethe-builder`, `alethe-rapido` desenhados.
+- Antigravity CLI (`agy` 1.3.5) instalado; Caveman (say less) instalado e desligado por padrão.
+- Avaliados: Caveman, ECC, OmniRoute, AirLLM, Hermes, OpenClaw, N.O.M.A.D., openpi, FoxProfile, Daytona.
+- Novos projetos: **Franca Atende + Bina AI** (voz, `voz-agentes`) e **Biblioteca arXiv offline** (`biblioteca-arxiv`).
+- Docs reorganizados: TAREFAS em sprints com placar e lacunas; PROVEDORES reescrito; Hermes/OpenClaw na arquitetura.
+
+**Aprendizados**
+- Variável de ambiente não basta para o 9router 0.5.59: só `--port`/`--host` funcionam.
+- O catálogo do 9router não lista os modelos do OpenRouter; modelos grátis "pensam" e precisam de `max_tokens` maior.
+- Recipe ≠ export; repositório arquivado (Daytona) não serve para segurança; sempre ler hooks antes de instalar plugin.
+
+**Próximo passo**
+- Reiniciar o PC → cadastrar `agy` e `freebuff` → criar os combos → 1ª orquestração com a Biblioteca arXiv. Ver [RETOMAR.md](./RETOMAR.md).
 ## 15/10/2026 — Dia 2: entender a arquitetura
 
 **Feito**
