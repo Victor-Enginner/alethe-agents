@@ -194,7 +194,7 @@ por terminal: `CAVEMAN_DEFAULT_MODE=caveman` (ideal para agentes trabalhadores).
 | Ferramenta | Categoria | Veredito |
 |---|---|---|
 | **9router** | Gateway | ✅ **em uso** (seção 4) |
-| **OmniRoute** | Gateway + compressão | 🧪 testar a compressão contra o 9router |
+| **OmniRoute** 3.8.51 | Gateway + compressão | 🔄 **instalado** em `O:/data/omniroute` (porta 41030, só 127.0.0.1, `REQUIRE_API_KEY=true` testado: 401 sem chave, segredos aleatórios). Subir: aba do Terminal com `DATA_DIR=O:/data/omniroute/data` + `omniroute.cmd`. Falta: senha, chave, provedores e o teste medido contra o 9router |
 | **LiteLLM** | Gateway (`tools/litellm`, porta 41000) | ⚠️ terceiro gateway: decidir manter ou desligar (D-006) |
 | **Ollama** | Provedor local (`O:\data\ollama`) | ✅ entra **por último** nos combos (usa a máquina) |
 | **AirLLM** | Inferência local camada por camada | ❌ lento demais para agentes |

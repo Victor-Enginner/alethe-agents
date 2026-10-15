@@ -74,7 +74,11 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 - [ ] Caveman nos agentes trabalhadores (`CAVEMAN_DEFAULT_MODE=caveman`)
 - [ ] Caveman "read less": entender a convivência com o 9router antes de ligar
 - [ ] 🧪 ECC em perfil `minimal` (planner, code-reviewer, security-reviewer, `/context-budget`): ler hooks, instalar seletivo, medir contra o Caveman
-- [ ] 🧪 9router × OmniRoute (compressão real, mesma tarefa) · o Victor aposta que o OmniRoute ajuda mais: testar com o mesmo pedido e medir tokens
+- [x] OmniRoute 3.8.51 instalado e seguro (41030, loopback, chave obrigatória) — ok 16/10
+- [ ] OmniRoute: senha + chave + provedores (Victor, no painel)
+- [ ] 🧪 9router × OmniRoute: mesmo pedido, medir tokens e tempo
+- [ ] ⚠️ Desligar o túnel público do 9router (cloudflared ligado ao configurar o 9Remote)
+- [x] Regras do Node no firewall (perfil Público) desabilitadas pelo Victor — ok 16/10
 - [ ] Decidir o gateway oficial e o destino do LiteLLM (:41000), registrar como D-006
 - [ ] Medir RAM/CPU: app parado, 3 agentes, 10 agentes
 
