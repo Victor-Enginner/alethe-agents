@@ -48,6 +48,16 @@ Por que trocar a senha mesmo só aceitando conexões locais: qualquer programa n
 maliciosa aberta no navegador, consegue fazer pedidos para `127.0.0.1`. Porta trocada + senha
 forte + chave obrigatória são camadas que se somam.
 
+### Verificação feita em 15/10/2026
+
+| Teste | Resultado |
+|---|---|
+| Escuta | só `127.0.0.1:41010`; IP da rede recusado |
+| Senha do painel | própria (hash no banco), `123456` não vale mais |
+| `POST /v1/chat/completions` sem chave / chave falsa | 401 / 401 |
+| Com a chave do Alethe | aceita (404 só porque ainda não há provedor) |
+| `GET /v1/models` | público por design do 9router: lista o catálogo, sem gastar tokens |
+
 ## Desenho alvo
 
 Ver `diagramas/conexoes-provedores.drawio` (abrir no draw.io) e `diagramas/conexoes-provedores.excalidraw`.
