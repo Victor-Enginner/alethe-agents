@@ -2,10 +2,20 @@
 
 Lista viva do projeto, em **ordem de execução** (sem prazos: cada etapa leva o tempo que precisar).
 Ao concluir: trocar `[ ]` por `[x]` e marcar **ok** com a data em que foi feita.
-Uma tarefa grande demais para um dia vira várias pequenas.
-Cada sessão termina com: diário atualizado, commit + push. O "DIA XX/100" da série de vídeos conta os dias gravados, não prazos.
+Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O "DIA XX/100" da série de vídeos conta os dias gravados, não prazos.
 
 **Legenda:** `ok` concluída · `🔄` em andamento · `⛔` bloqueada (motivo ao lado) · `🧪` precisa de teste antes de decidir
+
+---
+
+## Placar
+
+| Bloco | Feito | Falta | Situação |
+|---|---|---|---|
+| 1 — Fundação | sprints 1.1, 1.2 e 1.3 | 1.4 a 1.7 | 🔄 provedores prontos; falta agentes, economia e 1ª orquestração |
+| 2 — Orquestração | — | tudo | a fazer (a 1ª orquestração real abre este bloco) |
+| 3 — Automações | estudo Toolzz Voice | resto | a fazer · projeto de voz em `PROJETOS/voz-agentes` |
+| 4 — Produto | — | tudo | a fazer |
 
 ---
 
@@ -13,6 +23,8 @@ Cada sessão termina com: diário atualizado, commit + push. O "DIA XX/100" da s
 
 - [x] Toda mudança vai pro Git, README e DIARIO — ok 14/10
 - [x] Dívidas técnicas registradas em [DIVIDAS.md](./DIVIDAS.md) — ok 15/10
+- [x] Sem prazos estimados: só ordem e dependência — ok 15/10
+- [x] Ollama sempre por último (usa a máquina local) — ok 15/10
 - [ ] Sites: nada de site genérico gerado por IA. Só componentes via MCP do 21st.dev (heros e animações complexas)
 - [ ] Agentes autônomos (Hermes, OpenClaw) sempre em **sandbox Docker**, nunca com acesso livre ao PC
 - [ ] Toda decisão entre ferramentas parecidas vira um registro em DECISOES.md, com teste medido
@@ -21,56 +33,94 @@ Cada sessão termina com: diário atualizado, commit + push. O "DIA XX/100" da s
 
 ## Bloco 1 — Fundação
 
+### Sprint 1.1 — Fork e base ✅
 - [x] Fork rodando, README, carrossel ASCII, marco 0 — ok 14/10
 - [x] Guia de arquitetura ([ARQUITETURA.md](./ARQUITETURA.md)) — ok 15/10
-- [x] Pesquisa das ferramentas de provedores e orquestração ([PROVEDORES.md](./PROVEDORES.md)) — ok 15/10
-- [x] Diagrama de conexões em draw.io e Excalidraw (`docs/fork/diagramas/`) — ok 15/10
-- [x] Instalar o 9router pelo Alethe (v0.5.59, verificado no disco) — ok 15/10
-- [x] Levantamento de segurança do 9router (senha padrão, porta, chaves) — ok 15/10
-- [x] Corrigir o 9router subindo exposto na rede; agora só 127.0.0.1:41010 (ver `seguranca/`) — ok 15/10
-- [ ] ⛔ Push da correção: aguardando aviso privado ao autor. E-mail pronto em [`seguranca/EMAIL-AUTOR-9router.md`](./seguranca/EMAIL-AUTOR-9router.md)
-- [x] Senha própria no 9router (gravada com hash; conferido no banco) — ok 15/10
-- [x] Travas nos padrões seguros: requireLogin e requireApiKey ligados, nenhum túnel ativo — ok 15/10
-- [x] Chave de API do Alethe salva; testado: sem chave = 401, chave falsa = 401, chave real = aceita — ok 15/10
-- [ ] Ligar Claude Code e Codex passando pelo 9router; ver o uso na topbar
-- [x] OpenRouter conectado no 9router (chave oficial) e testado ponta a ponta: Nemotron Super 120B grátis respondeu em 2,4 s — ok 15/10
-- [ ] Testar o OpenRouter via OpenCode dentro do Alethe
-- [x] Conexões por assinatura (claude, codex, antigravity, github) mantidas por decisão do Victor (D-005) — ok 15/10
-- [ ] Mais provedores grátis no 9router (em andamento pelo Victor)
-- [x] Antigravity CLI (`agy`) instalado em `%LOCALAPPDATA%\agy\bin` — ok 15/10
-- [ ] Cadastrar `agy` como agente personalizado no Alethe
-- [ ] Freebuff (conta paga): cadastrar como agente personalizado no Alethe
-- [x] Caveman 4.0.1 instalado como plugin do Claude Code (só say less), **desligado por padrão** (`%APPDATA%\caveman\config.json`), telemetria off (`DO_NOT_TRACK=1`) — ok 15/10
-- [ ] 🧪 Caveman: medir economia (antes/depois) com o mesmo roteiro
-- [ ] Caveman "read less" (proxy): só depois de entender a convivência com o 9router (ele mexe no ANTHROPIC_BASE_URL)
-- [ ] Gemini (AI Studio) e Groq como fallback no combo
-- [ ] Ollama local no fim do combo (por último: usa a máquina)
-- [ ] Medir RAM/CPU: app parado, 3 agentes, 10 agentes (tabela no PROVEDORES.md)
-- [ ] 🧪 Teste comparativo: 9router × OmniRoute (compressão real em tokens, mesma tarefa)
-- [ ] Decidir o gateway oficial (D-005) e desligar o que sobrar (LiteLLM?)
-- [ ] Antigravity e OpenCode: conferir integração nativa do Alethe
-- [ ] Freebuff como worker gratuito (avaliar a qualidade em tarefas simples)
-- [ ] Etapa 1 da trilha: comando Rust `ola` + botão (entender `invoke`)
-- [ ] Marco 1: provedores conectados, medidos e documentados
+- [x] Pesquisa de provedores e orquestração ([PROVEDORES.md](./PROVEDORES.md)) — ok 15/10
+- [x] Diagramas draw.io e Excalidraw (`diagramas/`) — ok 15/10
+
+### Sprint 1.2 — 9router seguro ✅
+- [x] Instalar o 9router pelo Alethe (v0.5.59) — ok 15/10
+- [x] Corrigir o 9router subindo exposto na rede; agora só `127.0.0.1:41010` ([seguranca/](./seguranca/)) — ok 15/10
+- [x] Senha própria, travas (login e chave obrigatórios), sem túnel — ok 15/10
+- [x] Chave de API do Alethe; testado: sem chave 401, chave falsa 401, real aceita — ok 15/10
+- [ ] ⛔ Push da correção: aguardando aviso privado ao autor ([e-mail pronto](./seguranca/EMAIL-AUTOR-9router.md))
+
+### Sprint 1.3 — Provedores conectados ✅
+- [x] OpenRouter (chave) testado — ok 15/10
+- [x] Conexões por assinatura mantidas por decisão do Victor (D-005) — ok 15/10
+- [x] Teste real das 9 conexões: 5 funcionam (cc, cx, ag, gh, openrouter) — ok 15/10
+- [x] Desenho dos combos `alethe-topo`, `alethe-builder`, `alethe-rapido` ([PROVEDORES.md](./PROVEDORES.md)) — ok 15/10
+
+### Sprint 1.4 — Combos ativos e conexões com falha 🔄
+- [ ] Criar os 3 combos no painel do 9router (Victor, exige login no painel)
+- [ ] Testar cada combo com um pedido real e derrubar o 1º modelo para ver o fallback
+- [ ] Gemini CLI (`gc/`): resolver o 403 em todos os modelos
+- [ ] Cline (`cl/`): 401/402, reautenticar ou remover
+- [ ] api.airforce (`af/`): 402, achar modelos grátis ou remover
+- [ ] Poolside (`ps/`): 404, achar os ids corretos dos modelos
+- [ ] Mais provedores grátis (Victor conectando): testar um a um com `A JORNADA\tools\testar-modelos-9router.ps1 -Models <prefixo/modelo>`
+- [ ] Gemini (AI Studio, chave) e Groq (chave) como fallback
+- [ ] Ollama local no fim de cada combo (por último)
+
+### Sprint 1.5 — Agentes no Alethe
+- [x] Antigravity CLI (`agy`) instalado — ok 15/10
+- [ ] Cadastrar `agy` como agente personalizado (Configurações → Terminal e agentes)
+- [ ] Cadastrar `freebuff` (conta paga) como agente personalizado
+- [ ] OpenCode com o 9router ligado: usar o combo `alethe-rapido` dentro do Alethe
+- [ ] Confirmar que Claude Code e Codex abertos **sem** 9router seguem na assinatura direta
+
+### Sprint 1.6 — Economia de tokens
+- [x] Caveman 4.0.1 (say less) instalado, desligado por padrão, telemetria off — ok 15/10
+- [ ] 🧪 Medir o Caveman: mesmo roteiro com e sem, contar tokens
+- [ ] Caveman nos agentes trabalhadores (`CAVEMAN_DEFAULT_MODE=caveman`)
+- [ ] Caveman "read less": entender a convivência com o 9router antes de ligar
+- [ ] 🧪 9router × OmniRoute (compressão real, mesma tarefa)
+- [ ] Decidir o gateway oficial e o destino do LiteLLM (:41000), registrar como D-006
+- [ ] Medir RAM/CPU: app parado, 3 agentes, 10 agentes
+
+### Sprint 1.7 — Primeira orquestração real 🎯
+- [ ] Escolher o 1º projeto de teste (pequeno, com resultado visível)
+- [ ] Configurar os papéis do orquestrador (Configurações → Orquestração) apontando para os combos
+- [ ] Rodar: planejador delega para scout/builder, revisar o resultado e o diff
+- [ ] Registrar: tempo, tokens, qual modelo fez o quê, o que falhou
+- [ ] Marco 1: provedores conectados, orquestração testada e tudo documentado
+
+---
 
 ## Bloco 2 — Orquestração
 
-- [ ] Usar o orquestrador nativo do Alethe: planejador + papéis (scout, builder, expert)
-- [ ] Configurar regras de roteamento por cota (`QuotaGate`) com os provedores do Bloco 1
+- [ ] Regras de roteamento por cota (`QuotaGate`) com os provedores do Bloco 1
 - [ ] Docker: sandbox para agentes autônomos
-- [ ] Hermes Agent dentro da sandbox: memória persistente e skills
-- [ ] OpenClaw dentro da sandbox: gateway, canais, sub-agentes
-- [ ] Comparar orquestrador do Alethe × OpenClaw × Hermes (quando usar cada um)
+- [ ] Hermes Agent dentro da sandbox
+- [ ] OpenClaw dentro da sandbox
+- [ ] Comparar orquestrador do Alethe × OpenClaw × Hermes
+- [ ] Etapa 1 da trilha de estudo: comando Rust `ola` + botão (entender `invoke`)
 
 ## Bloco 3 — Automações reais
 
+- [x] Estudo de caso Toolzz Voice e planejamento do projeto de voz — ok 15/10 → `PROJETOS/voz-agentes`
 - [ ] Pipeline de conteúdo: roteiro → narração → vídeo → thumbnail (série 100 dias)
 - [ ] Publicação pelas APIs oficiais (YouTube Data API, Meta Graph API, TikTok Content Posting API)
-- [x] Estudo de caso Toolzz Voice e planejamento do projeto de voz — ok 15/10 → projeto próprio em `PROJETOS/voz-agentes`
-- [ ] Protótipo de agente de voz próprio
+- [ ] Protótipo de agente de voz próprio (Bina AI)
 
 ## Bloco 4 — Produto e negócio
 
 - [ ] Squad de agentes para um nicho real (ex.: agendamento e estoque em clínicas)
 - [ ] Identidade própria do fork (nome, logo, tema)
 - [ ] Marco final: demonstração completa, do DIA 01 ao 100
+
+---
+
+## Lacunas (o que ainda não sabemos ou não está coberto)
+
+| Lacuna | Por que importa | Onde resolver |
+|---|---|---|
+| Gemini CLI dá 403 em tudo | Gemini 3.1 Pro seria um ótimo modelo no combo topo | Sprint 1.4 |
+| Combo do 9router nunca testado com falha real | Não sabemos se o fallback troca rápido nem como o agente reage | Sprint 1.4 |
+| Uso real de cota das assinaturas pelo 9router | Orquestração pode esgotar a cota do Claude/Codex que você usa direto | Sprint 1.7 (medir) |
+| Nenhuma medição de tokens ainda | "Economia" sem número é palpite | Sprint 1.6 |
+| Teto de RAM/CPU com vários agentes | Define quantos agentes rodam juntos no seu PC | Sprint 1.6 |
+| Orquestrador nativo do Alethe nunca usado | É o coração da orquestração real | Sprint 1.7 |
+| 4 commits de segurança só locais | GitHub do fork desatualizado | E-mail ao autor → push |
+| Dívidas técnicas DT-01 a DT-06 em aberto | Comentários em PT, cores fixas, changelog, testes | [DIVIDAS.md](./DIVIDAS.md) |
