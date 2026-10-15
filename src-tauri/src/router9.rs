@@ -259,7 +259,12 @@ pub fn router9_start(
         }
     };
 
+    // 9router's cli.js overwrites PORT/HOSTNAME with its own defaults (20128, 0.0.0.0) unless the
+    // flags are passed, so the env vars alone left it LAN-exposed on the default port. Without a
+    // TTY its interactive menu also reads EOF as "exit" and kills the server; `--tray` is the
+    // headless mode, and `--skip-update` keeps it from updating itself.
     command
+        .args(router9_cli_args(port))
         .env("PORT", port.to_string())
         .env("NEXT_PUBLIC_BASE_URL", format!("http://127.0.0.1:{port}"))
         // 9router serves a Next.js app, which binds 0.0.0.0 unless HOSTNAME says otherwise. Alethe
@@ -273,6 +278,39 @@ pub fn router9_start(
     let child = command.spawn().map_err(|e| format!("spawn_failed:{e}"))?;
     *slot = Some(child);
     Ok(())
+}
+
+/// Flags that make 9router bind loopback on `port` and run headless.
+fn router9_cli_args(port: u16) -> Vec<String> {
+    vec![
+        "--port".into(),
+        port.to_string(),
+        "--host".into(),
+        "127.0.0.1".into(),
+        "--tray".into(),
+        "--skip-update".into(),
+        "--no-browser".into(),
+    ]
+}
+
+#[cfg(test)]
+mod cli_args_tests {
+    use super::router9_cli_args;
+
+    #[test]
+    fn binds_loopback_on_the_requested_port() {
+        let args = router9_cli_args(41010);
+        let after = |flag: &str| {
+            args.iter()
+                .position(|a| a == flag)
+                .and_then(|i| args.get(i + 1))
+                .cloned()
+        };
+        assert_eq!(after("--port").as_deref(), Some("41010"));
+        assert_eq!(after("--host").as_deref(), Some("127.0.0.1"));
+        assert!(args.iter().any(|a| a == "--tray"));
+        assert!(args.iter().any(|a| a == "--skip-update"));
+    }
 }
 
 #[tauri::command]
