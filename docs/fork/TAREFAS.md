@@ -51,7 +51,7 @@ Cada sessão termina com: diário atualizado, commit + push. O "DIA XX/100" da s
 
 - [ ] Pipeline de conteúdo: roteiro → narração → vídeo → thumbnail (série 100 dias)
 - [ ] Publicação pelas APIs oficiais (YouTube Data API, Meta Graph API, TikTok Content Posting API)
-- [ ] Estudo de caso Toolzz Voice: agente de voz (telefonia, WhatsApp) com stack aberta
+- [x] Estudo de caso Toolzz Voice e planejamento do projeto de voz — ok 15/10 → projeto próprio em `PROJETOS/voz-agentes`
 - [ ] Protótipo de agente de voz próprio
 
 ## Bloco 4 — Produto e negócio
