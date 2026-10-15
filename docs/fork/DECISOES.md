@@ -32,3 +32,14 @@ disponíveis em `asciiRecipes.ts` para usos futuros.
 **Contexto:** o projeto estava dentro de `VIRTUAL-3D\agentes`, sem relação com o VIRTUAL-3D.
 **Decisão:** mover para `O:\dev\A JORNADA\PROJETOS\alethe`.
 **Consequência:** caminho curto e independente. O cache Rust foi recriado do zero.
+
+## D-005 — Assinaturas por OAuth no 9router: mantidas (15/10/2026)
+
+**Contexto:** além das chaves de API (OpenRouter), o 9router recebeu conexões por login de conta:
+Claude, Codex, Antigravity e GitHub Copilot. Os termos desses serviços restringem o uso de
+assinaturas pessoais por proxies de terceiros, e o 9router tem vulnerabilidades conhecidas.
+**Decisão (Victor):** manter todas e seguir adicionando provedores grátis. "Quanto mais melhor."
+**Riscos aceitos:** possível suspensão das contas; tokens de login guardados no banco do 9router.
+**Mitigações em vigor:** 9router só em `127.0.0.1:41010` (correção de segurança do fork), senha
+própria, chave de API obrigatória, túnel desligado, telemetria do Caveman desligada. Não expor a
+pasta `9router-data` em backups públicos. Monitorar avisos ou bloqueios nos painéis das contas.
