@@ -28,7 +28,7 @@ Cada sessão termina com: diário atualizado, commit + push. O "DIA XX/100" da s
 - [x] Instalar o 9router pelo Alethe (v0.5.59, verificado no disco) — ok 15/10
 - [x] Levantamento de segurança do 9router (senha padrão, porta, chaves) — ok 15/10
 - [x] Corrigir o 9router subindo exposto na rede; agora só 127.0.0.1:41010 (ver `seguranca/`) — ok 15/10
-- [ ] ⛔ Push da correção: aguardando aviso privado ao autor (contact@kc1t.com)
+- [ ] ⛔ Push da correção: aguardando aviso privado ao autor. E-mail pronto em [`seguranca/EMAIL-AUTOR-9router.md`](./seguranca/EMAIL-AUTOR-9router.md)
 - [ ] 🔄 Endurecer: senha própria, conferir requireLogin/requireApiKey, chave por cliente
 - [ ] Ligar Claude Code e Codex passando pelo 9router; ver o uso na topbar
 - [ ] Conectar Ollama local (modelos em `O:\data\ollama`) como provedor no 9router
