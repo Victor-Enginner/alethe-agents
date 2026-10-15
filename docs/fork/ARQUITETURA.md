@@ -289,3 +289,15 @@ continua recusado (mesmo teste da verificação de segurança).
 3. **Hermes** (um agente só, mais simples)
 4. **OpenClaw** (gateway, canais, sub-agentes)
 5. Comparar e definir quando usar o orquestrador do Alethe, o Hermes ou o OpenClaw (decisão D-007)
+## 11. Quem trabalha no orquestrador (levantado em 16/10/2026)
+
+- O orquestrador só sabe iniciar **dois tipos de worker**: Codex (`codex app-server --stdio`) e
+  Claude (`claude -p ... --permission-mode bypassPermissions`) — `orchestrator_core.rs`, `Launcher`.
+- Esses workers rodam **direto nas contas** (assinatura do Claude, conta do Codex), **sem o 9router**:
+  o orquestrador não injeta `ANTHROPIC_BASE_URL`/`OPENAI_BASE_URL`.
+- Papéis (Configurações → Orquestração) escolhem agente, modelo, esforço, somente leitura, orçamento
+  e fallback (troca quando a cota passa de 80%). Presets de roteamento: Economia, Equilibrado,
+  Desempenho, Personalizado.
+- **Lacuna:** os combos do 9router (e OpenCode/agy/Freebuff) **não** entram como workers. Para
+  isso seria preciso um novo `Launcher` em Rust (ex.: OpenCode headless apontando para o 9router).
+  Candidato a evolução do fork depois da 1ª orquestração.

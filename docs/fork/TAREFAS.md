@@ -80,7 +80,10 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 
 ### Sprint 1.7 — Primeira orquestração real 🎯
 - [x] 1º projeto de teste: **Biblioteca arXiv offline** (`PROJETOS/biblioteca-arxiv`) — ok 15/10
-- [ ] Configurar os papéis do orquestrador (Configurações → Orquestração) apontando para os combos
+- [x] Levantado como o orquestrador funciona: workers só Claude e Codex, direto nas contas (ARQUITETURA §11) — ok 16/10
+- [ ] Configurar os papéis no app: `scout`, `builder`, `builder-claude`, `expert` + preset Equilibrado
+- [x] Tarefa da 1ª orquestração escrita: `biblioteca-arxiv/docs/TAREFA-FASE1.md` — ok 16/10
+- [ ] Evolução do fork: `Launcher` OpenCode no orquestrador para usar os combos do 9router como workers
 - [ ] Rodar: planejador delega para scout/builder, revisar o resultado e o diff
 - [ ] Registrar: tempo, tokens, qual modelo fez o quê, o que falhou
 - [ ] Marco 1: provedores conectados, orquestração testada e tudo documentado
@@ -156,5 +159,6 @@ Desenho completo em [ARQUITETURA.md §10](./ARQUITETURA.md#10-hermes-e-openclaw-
 | Nenhuma medição de tokens ainda | "Economia" sem número é palpite | Sprint 1.6 |
 | Teto de RAM/CPU com vários agentes | Define quantos agentes rodam juntos no seu PC | Sprint 1.6 |
 | Orquestrador nativo do Alethe nunca usado | É o coração da orquestração real | Sprint 1.7 |
+| Workers do orquestrador não usam o 9router | Combos e modelos grátis ficam fora da orquestração | Novo `Launcher` (Rust) |
 | 4 commits de segurança só locais | GitHub do fork desatualizado | E-mail ao autor → push |
 | Dívidas técnicas DT-01 a DT-06 em aberto | Comentários em PT, cores fixas, changelog, testes | [DIVIDAS.md](./DIVIDAS.md) |
