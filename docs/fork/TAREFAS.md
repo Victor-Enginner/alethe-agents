@@ -72,6 +72,7 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 - [ ] 🧪 Medir o Caveman: mesmo roteiro com e sem, contar tokens
 - [ ] Caveman nos agentes trabalhadores (`CAVEMAN_DEFAULT_MODE=caveman`)
 - [ ] Caveman "read less": entender a convivência com o 9router antes de ligar
+- [ ] 🧪 ECC em perfil `minimal` (planner, code-reviewer, security-reviewer, `/context-budget`): ler hooks, instalar seletivo, medir contra o Caveman
 - [ ] 🧪 9router × OmniRoute (compressão real, mesma tarefa)
 - [ ] Decidir o gateway oficial e o destino do LiteLLM (:41000), registrar como D-006
 - [ ] Medir RAM/CPU: app parado, 3 agentes, 10 agentes

@@ -199,6 +199,11 @@ por terminal: `CAVEMAN_DEFAULT_MODE=caveman` (ideal para agentes trabalhadores).
 | **Caveman** | Compressão no agente | ✅ instalado (seção 8) |
 | **Hermes Agent** | Agente autônomo (Nous Research) | ⚠️ Bloco 2, só em sandbox Docker |
 | **OpenClaw** | Orquestrador/agente | ⚠️ Bloco 2, só em sandbox Docker |
+| **ECC** ([affaan-m/ECC](https://github.com/affaan-m/ECC), MIT) | Kit de harness: 71 agentes, 311 skills, hooks, Memory Vault, AgentShield, `/context-budget` | ✅ **seletivo** (perfil `minimal`): testar `planner`, `code-reviewer`, `security-reviewer` e `/context-budget` na sprint 1.6. Ler os hooks antes. Plugin completo anuncia o catálogo e pode **gastar** mais contexto. Sobrepõe o Caveman: medir. Bugs conhecidos no Windows nativo |
+| **Project N.O.M.A.D.** ([Crosstalk-Solutions](https://github.com/Crosstalk-Solutions/project-nomad), Apache-2.0) | Servidor de conhecimento offline (Kiwix, Kolibri, mapas, IA local, Qdrant) | ⏸️ Não agora: só Linux, sem autenticação por design. Referência de RAG (Qdrant) para a base de conhecimento da Bina |
+| **openpi** ([physical-intelligence](https://github.com/physical-intelligence/openpi), Apache-2.0) | Modelos VLA para robôs físicos | ❌ Fora do escopo (robótica, GPU NVIDIA 8-80 GB) |
+| **FoxProfile** ([chienbm98](https://github.com/chienbm98/foxprofile), MIT) | Perfis de navegador antidetecção (fingerprint, proxy, multi-contas) | ❌ Não integrar para multi-contas falsas em redes sociais (viola os termos das plataformas, como o próprio README avisa). Uso legítimo futuro: testes de sites ou contas reais de clientes com autorização |
+| **Daytona** ([daytonaio](https://github.com/daytonaio/daytona)) | Sandboxes para código gerado por IA | ❌ **Repositório arquivado** desde 06/2026 (sem correções; desenvolvimento migrou para código privado/nuvem). O isolamento de agentes será feito com Docker (sprint 2.1) |
 
 O estudo de caso Toolzz Voice foi para o projeto próprio: `PROJETOS/voz-agentes/docs/REFERENCIA-TOOLZZ.md`.
 
