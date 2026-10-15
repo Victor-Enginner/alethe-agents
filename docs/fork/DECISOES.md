@@ -44,3 +44,13 @@ assinaturas pessoais por proxies de terceiros, e o 9router tem vulnerabilidades 
 **Mitigações em vigor:** 9router só em `127.0.0.1:41010` (correção de segurança do fork), senha
 própria, chave de API obrigatória, túnel desligado, telemetria do Caveman desligada. Não expor a
 pasta `9router-data` em backups públicos. Monitorar avisos ou bloqueios nos painéis das contas.
+<a id="d-006"></a>
+## D-006 — 9router nunca exposto: sem Tunnel e sem Tailscale no 9router (16/10/2026)
+
+**Contexto:** o túnel público do 9router (cloudflared) e o modo Tailscale dele publicariam as contas
+conectadas (Claude, Codex, Antigravity, Copilot) na internet. Além disso, o 9router 0.5.59 monta o túnel
+na porta padrão 20128, então ele nem funciona com a nossa porta 41010.
+**Decisão (Victor):** não usar túnel no 9router "de forma alguma". Acesso de fora = **9Remote** (controle do PC)
++ **Tailscale** (rede privada). Os agentes continuam falando com o 9router por `127.0.0.1`.
+**Consequência:** se alguém religar, desligar com `A JORNADA/tools/desligar-tunel-9router.js`.
+Evolução do fork: impedir no código que o Alethe/9router ligue o túnel (tarefa aberta).
