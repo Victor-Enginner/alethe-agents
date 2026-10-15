@@ -75,12 +75,12 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 - [ ] Caveman "read less": entender a convivência com o 9router antes de ligar
 - [ ] 🧪 ECC em perfil `minimal` (planner, code-reviewer, security-reviewer, `/context-budget`): ler hooks, instalar seletivo, medir contra o Caveman
 - [x] OmniRoute 3.8.51 instalado e seguro (41030, loopback, chave obrigatória) — ok 16/10
-- [ ] OmniRoute: senha + chave + provedores (Victor, no painel)
+- [x] OmniRoute: senha, chave e provedores (OpenRouter grátis, Groq) — ok 16/10
 - [x] Botões na topbar para abrir os painéis do 9router e OmniRoute — ok 16/10
 - [x] Decisão D-006: 9router sem Tunnel/Tailscale (desligado de novo) — ok 16/10
 - [ ] Trava no fork: ao iniciar o 9router, forçar `tunnelEnabled=false` e `tailscaleEnabled=false`
 - [ ] Bug: pílula mostra "9router off" com ele rodando (em `--tray` o processo-pai encerra; `router9_status` olha só o filho). Corrigir no Rust: considerar a porta respondendo
-- [ ] 🧪 9router × OmniRoute: mesmo pedido, medir tokens e tempo
+- [x] 9router × OmniRoute medido: OmniRoute −33,6% de tokens de entrada, mais lento; usar os dois (D-007) — ok 16/10
 - [x] Túnel público do 9router desligado (`tunnelEnabled` e `tailscaleEnabled` = false; apontava para a porta antiga 20128) — ok 16/10
 - [x] Regras do Node no firewall (perfil Público) desabilitadas pelo Victor — ok 16/10
 - [ ] Decidir o gateway oficial e o destino do LiteLLM (:41000), registrar como D-006

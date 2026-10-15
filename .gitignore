@@ -51,3 +51,7 @@ pnpm-debug.log*
 
 # Graphify — grafo gerado (cache/AST/graph.json ~80MB). Sempre reconstruível.
 graphify-out/
+
+# segredos e binarios que nunca vao pro Git
+docs/chave*
+*.exe

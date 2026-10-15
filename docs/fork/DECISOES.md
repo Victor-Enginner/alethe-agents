@@ -54,3 +54,22 @@ na porta padrão 20128, então ele nem funciona com a nossa porta 41010.
 + **Tailscale** (rede privada). Os agentes continuam falando com o 9router por `127.0.0.1`.
 **Consequência:** se alguém religar, desligar com `A JORNADA/tools/desligar-tunel-9router.js`.
 Evolução do fork: impedir no código que o Alethe/9router ligue o túnel (tarefa aberta).
+
+<a id="d-007"></a>
+## D-007 — 9router e OmniRoute juntos, cada um no seu papel (16/10/2026)
+
+**Teste** (`A JORNADA/tools/comparar-gateways.mjs`): mesmo modelo (Groq `openai/gpt-oss-120b`), mesmo pedido
+(log de 120 linhas + pergunta curta, típico de agente), 3 rodadas.
+
+| | 9router | OmniRoute |
+|---|---|---|
+| Tokens de entrada | 5.944 | **3.944 (−33,6%)** |
+| Resposta | correta (worker-6, 989 ms) | correta, mesma informação |
+| Tempo | **1,1–1,5 s** | 2,4 s (aquecido) · 10,9 s (1ª chamada) |
+| No limite do Groq (429) | erro na hora | esperou e respondeu (31 s) |
+
+**Decisão:** usar os dois. **OmniRoute** para trabalho com muito contexto (workers do orquestrador, leitura de
+logs, documentos, papers): ~1/3 menos tokens sem perder a resposta. **9router** para o que é interativo e
+rápido, e porque é o gateway integrado ao Alethe (combos, OpenCode, topbar).
+**Pendências:** repetir o teste com outros tipos de pedido (código, conversa) e com o Caveman ligado; medir o
+efeito na cota das assinaturas; o LiteLLM (:41000) vira candidato a desligar (DT-06).
