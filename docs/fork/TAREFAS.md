@@ -24,7 +24,9 @@ Cada dia termina com: diário atualizado, commit + push, e o episódio do dia (D
 - [x] Dia 2 · Guia de arquitetura ([ARQUITETURA.md](./ARQUITETURA.md)) — ok 15/10
 - [x] Dia 2 · Pesquisa das ferramentas de provedores e orquestração ([PROVEDORES.md](./PROVEDORES.md)) — ok 15/10
 - [x] Dia 2 · Diagrama de conexões em draw.io e Excalidraw (`docs/fork/diagramas/`) — ok 15/10
-- [ ] Dia 3 · **Conectar o 9router** pelo próprio Alethe (botão de instalar, que já existe no app)
+- [x] Dia 3 · Instalar o 9router pelo Alethe (v0.5.59, verificado no disco) — ok 15/10
+- [x] Dia 3 · Levantamento de segurança do 9router (senha padrão, porta, chaves) — ok 15/10
+- [ ] Dia 3 · 🔄 Endurecer: porta 41010, senha própria, conferir requireLogin/requireApiKey, chave por cliente
 - [ ] Dia 3 · Ligar Claude Code e Codex passando pelo 9router; ver o uso na topbar
 - [ ] Dia 4 · Conectar Ollama local (modelos em `O:\data\ollama`) como provedor no 9router
 - [ ] Dia 4 · Medir RAM/CPU: app parado, 3 agentes, 10 agentes (tabela no PROVEDORES.md)

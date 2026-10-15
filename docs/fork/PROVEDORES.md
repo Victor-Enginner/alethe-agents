@@ -29,6 +29,25 @@ Números marcados como *autodeclarados* vêm do próprio projeto e ainda precisa
 | **Hermes Agent** | Agente autônomo (Nous Research) | Memória persistente, aprende skills, 70+ ferramentas, conversa por Telegram/Discord/WhatsApp. MIT | ⚠️ Poderoso e com **muitas permissões**: só em sandbox Docker | Bloco 2 |
 | **OpenClaw** | Orquestrador / agente | Processo "Gateway" central, agentes, skills da comunidade, canais de chat, sub-agentes. MIT | ⚠️ Mesmo cuidado: sandbox Docker | Bloco 2 |
 
+## Segurança do 9router (configuração obrigatória)
+
+Levantado no código do 9router 0.5.59 e do Alethe em 15/10/2026.
+
+| Risco | Situação de fábrica | O que fazemos |
+|---|---|---|
+| Porta conhecida (20128) | Alethe usa 20128 se nada for configurado | **Porta 41010**, registrada em `A JORNADA/PORTAS.md` |
+| Senha padrão do painel | **`123456`** até definir outra (o Alethe não passa `INITIAL_PASSWORD`) | Trocar no **primeiro login**, antes de cadastrar qualquer provedor. A senha nova é salva com hash (bcrypt) |
+| Acesso pela rede local | Alethe força `HOSTNAME=127.0.0.1`: só o próprio PC acessa | Manter. Nunca usar o compartilhamento remoto do 9router |
+| Painel sem login | `requireLogin: true` de fábrica | Conferir que continua ligado |
+| `/v1` sem chave | `requireApiKey: true` de fábrica | Criar **uma chave por cliente** (Alethe, Claude Code...), para poder revogar só uma |
+| Túnel público | Desligado; o Alethe nunca liga | Manter desligado |
+| Vulnerabilidades conhecidas | Aviso do próprio Alethe | Ler os avisos antes de colocar chaves reais; manter a versão fixada pelo Alethe |
+| Contas reaproveitando sessão web (ChatGPT/Claude.ai) | Suportado pelo 9router | **Não usar**: viola os termos dos provedores e pode banir a conta. Só chaves de API oficiais (regra de `research/COMPUTACAO-REMOTA.md`) |
+
+Por que trocar a senha mesmo só aceitando conexões locais: qualquer programa no PC, ou uma página
+maliciosa aberta no navegador, consegue fazer pedidos para `127.0.0.1`. Porta trocada + senha
+forte + chave obrigatória são camadas que se somam.
+
 ## Desenho alvo
 
 Ver `diagramas/conexoes-provedores.drawio` (abrir no draw.io) e `diagramas/conexoes-provedores.excalidraw`.
