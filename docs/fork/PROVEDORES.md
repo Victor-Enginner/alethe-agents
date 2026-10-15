@@ -1,182 +1,224 @@
-# Provedores, gateways e orquestradores
+# Provedores, gateways e agentes
 
-Pesquisa de 15/10/2026. Para cada ferramenta: o que é, o que faz, se serve para nós e em que ordem entra (ordem, não prazo).
-Números marcados como *autodeclarados* vêm do próprio projeto e ainda precisam do nosso teste.
+Documento de referência de como os modelos de IA chegam até o Alethe. Levantado e testado em 15/10/2026.
+Números *autodeclarados* vêm do próprio projeto citado e ainda precisam de medição nossa.
 
-## Vocabulário em 1 minuto
+**Sumário:** [Status](#1-status-deste-documento) · [Vocabulário](#2-vocabulário) · [Arquitetura](#3-arquitetura-atual) ·
+[9router](#4-9router-o-gateway) · [Conexões testadas](#5-conexões-testadas) · [Combos](#6-combos-de-fallback) ·
+[Agentes](#7-agentes-no-alethe) · [Economia de tokens](#8-economia-de-tokens) · [Ferramentas avaliadas](#9-ferramentas-avaliadas) ·
+[CPU e memória](#10-cpu-e-memória) · [Como testar](#11-como-testar-um-provedor-novo) · [Fontes](#12-fontes)
+
+---
+
+## 1. Status deste documento
+
+| Item | Estado |
+|---|---|
+| 9router instalado, seguro e verificado | ✅ |
+| 9 conexões testadas (5 funcionando) | ✅ |
+| Combos desenhados | ✅ |
+| Combos criados no painel e testados com falha real | ⏳ |
+| 4 conexões com erro resolvidas (Gemini CLI, Cline, api.airforce, Poolside) | ⏳ |
+| Gemini AI Studio e Groq (chaves) | ⏳ |
+| Ollama no fim dos combos | ⏳ (por último) |
+| `agy` e `freebuff` cadastrados como agentes no Alethe | ⏳ |
+| Medições: tokens (Caveman) e RAM/CPU | ⏳ |
+| Decisão do gateway oficial (9router × OmniRoute × LiteLLM) | ⏳ |
+
+As tarefas correspondentes estão em [TAREFAS.md](./TAREFAS.md) (sprints 1.4 a 1.6).
+
+## 2. Vocabulário
 
 | Termo | O que é | Analogia |
 |---|---|---|
-| **Provedor** | Quem tem o modelo: Anthropic (Claude), OpenAI, Google, DeepSeek, Ollama local | A cozinha que faz o prato |
-| **Gateway / roteador** | Um endereço único (`localhost:porta`) na frente de vários provedores. Troca de provedor quando um esgota a cota | A central de pedidos que distribui entre várias cozinhas |
-| **Compressão de tokens** | Encurta o que vai para o modelo (logs, saídas de ferramentas) antes de enviar | Resumir o pedido sem mudar o prato |
-| **Agente / CLI** | Programa que usa um modelo para agir: Claude Code, Codex, OpenCode, Freebuff | O cozinheiro |
-| **Orquestrador** | Coordena vários agentes: divide tarefas, distribui, junta resultados | O chefe de cozinha |
-| **MCP** | Protocolo padrão para dar ferramentas a um agente | Os utensílios que o cozinheiro pode usar |
+| **Provedor** | Quem tem o modelo: Anthropic, OpenAI, Google, OpenRouter, Ollama local... | O fornecedor de ingredientes |
+| **Modelo** | O "cérebro" que responde: Claude Opus 5, GPT-5.6, Gemini 3... | O ingrediente |
+| **Agente / CLI** | Programa que usa um modelo para agir: Claude Code, Codex, OpenCode, agy, Freebuff | O cozinheiro |
+| **Gateway / roteador** | Um endereço único na frente de vários provedores, que troca de provedor quando um falha | A central de compras |
+| **Combo / fallback** | Lista ordenada de modelos: se o 1º falhar, tenta o 2º, e assim por diante | O plano B, C, D... |
+| **Orquestrador** | Coordena vários agentes: divide, distribui e junta resultados | O chefe de cozinha |
+| **Compressão de tokens** | Encurta o que entra ou sai do modelo para gastar menos | Resumir o pedido sem mudar o prato |
+| **OAuth × chave de API** | OAuth = login com a sua conta/assinatura; chave = credencial de API cobrada por uso | Cartão da loja × conta corrente |
 
-## Ferramentas avaliadas
+## 3. Arquitetura atual
 
-| Ferramenta | Categoria | O que faz | Veredito | Ordem |
-|---|---|---|---|---|
-| **9router** | Gateway | Endpoint compatível com OpenAI/Anthropic, traduz entre formatos, fallback entre provedores, dashboard. Porta padrão 20128. MIT | ✅ **Usar primeiro**: já é **embutido no Alethe** (`src-tauri/src/router9.rs`, versão fixada 0.5.59, instala e liga só com clique) | 1º |
-| **OmniRoute** | Gateway + compressão | Mesmo papel do 9router, com motor de compressão (RTK + "Caveman"), *autodeclarado* 15-95% de economia. MIT | 🧪 **Testar contra o 9router.** Redundante como gateway; só vale se a compressão provar ganho real | 3º |
-| **LiteLLM** | Gateway | Já instalado em `tools/litellm`, porta 41000 | ⚠️ Terceiro gateway. Manter só se tiver algo que os outros não têm | 4º |
-| **AirLLM** | Inferência local | Roda modelos de 70B em 4 GB de VRAM carregando **uma camada por vez do disco** | ❌ **Não serve para agentes**: lento demais (sem tabela de tokens/s publicada). Para local, usar **Ollama** | — |
-| **Ollama** | Provedor local | Modelos locais, já instalado (modelos em `O:\data\ollama`) | ✅ Entra como provedor no gateway | 2º |
-| **Antigravity** | IDE / agente (Google) | O Alethe já lê sessões e uso (`antigravity_*.rs`, indicador na topbar) | ✅ Nativo | 5º |
-| **OpenCode** | Agente CLI | Suportado nativamente (`opencode_*.rs`) | ✅ Nativo | 5º |
-| **Freebuff** | Agente CLI gratuito | Versão grátis do Codebuff, paga com anúncios no terminal; modelos variam (DeepSeek, Gemini Flash...). `npm i -g freebuff` | 🧪 Bom para tarefas simples e baratas; depende de backend hospedado | 6º |
-| **Hermes Agent** | Agente autônomo (Nous Research) | Memória persistente, aprende skills, 70+ ferramentas, conversa por Telegram/Discord/WhatsApp. MIT | ⚠️ Poderoso e com **muitas permissões**: só em sandbox Docker | Bloco 2 |
-| **OpenClaw** | Orquestrador / agente | Processo "Gateway" central, agentes, skills da comunidade, canais de chat, sub-agentes. MIT | ⚠️ Mesmo cuidado: sandbox Docker | Bloco 2 |
+```text
+ AGENTES (quem trabalha)                      GATEWAY                     PROVEDORES (quem pensa)
+ ─────────────────────────                  ───────────                  ───────────────────────
+ Orquestrador do Alethe ──┐                                           ┌─► cc/  Claude (assinatura)
+ OpenCode ────────────────┼──► 9router  127.0.0.1:41010 ──────────────┼─► cx/  Codex (conta OpenAI)
+ (Claude Code/Codex,      │    · só aceita conexão do próprio PC      ├─► ag/  Antigravity
+  se ligados no 9router) ─┘    · senha própria + chave obrigatória    ├─► gh/  GitHub Copilot
+                               · combos de fallback                   ├─► openrouter/  modelos grátis
+                                                                      └─► Ollama local (por último)
 
-## Segurança do 9router (configuração obrigatória)
+ Claude Code · Codex · agy · Freebuff ──► direto na conta de cada um (padrão, sem 9router)
+```
 
-Levantado no código do 9router 0.5.59 e do Alethe em 15/10/2026.
+Diagramas editáveis: [`diagramas/conexoes-provedores.drawio`](./diagramas/) e `.excalidraw` (gerados por `gerar.mjs`; atualizar para este desenho).
 
-| Risco | Situação de fábrica | O que fazemos |
+## 4. 9router (o gateway)
+
+Embutido no Alethe (`src-tauri/src/router9.rs`), versão fixada **0.5.59**, instalado na pasta de perfil:
+`%LOCALAPPDATA%\com.kc1t.alethe.dev\profiles\default\tools\9router` (dados em `...\9router-data`).
+
+### 4.1 Configuração de segurança (em vigor)
+
+| Item | De fábrica | Como está |
 |---|---|---|
-| Porta conhecida (20128) | Alethe usa 20128 se nada for configurado | **Porta 41010**, registrada em `A JORNADA/PORTAS.md` |
-| Senha padrão do painel | **`123456`** até definir outra (o Alethe não passa `INITIAL_PASSWORD`) | Trocar no **primeiro login**, antes de cadastrar qualquer provedor. A senha nova é salva com hash (bcrypt) |
-| Acesso pela rede local | Alethe força `HOSTNAME=127.0.0.1`: só o próprio PC acessa | Manter. Nunca usar o compartilhamento remoto do 9router |
-| Painel sem login | `requireLogin: true` de fábrica | Conferir que continua ligado |
-| `/v1` sem chave | `requireApiKey: true` de fábrica | Criar **uma chave por cliente** (Alethe, Claude Code...), para poder revogar só uma |
-| Túnel público | Desligado; o Alethe nunca liga | Manter desligado |
-| Vulnerabilidades conhecidas | Aviso do próprio Alethe | Ler os avisos antes de colocar chaves reais; manter a versão fixada pelo Alethe |
-| Contas reaproveitando sessão web (ChatGPT/Claude.ai) | Suportado pelo 9router | **Não usar**: viola os termos dos provedores e pode banir a conta. Só chaves de API oficiais (regra de `research/COMPUTACAO-REMOTA.md`) |
+| Porta | 20128 | **41010** (registrada em `A JORNADA/PORTAS.md`) |
+| Endereço | `0.0.0.0` (rede toda). O Alethe 1.7.0 tentava limitar, mas não funcionava | **Só `127.0.0.1`**: bug corrigido no fork ([seguranca/](./seguranca/2026-10-15-9router-exposto-na-rede.md)) |
+| Senha do painel | `123456` | **Própria**, gravada com hash |
+| Login no painel | obrigatório | obrigatório |
+| Chave de API no `/v1` | obrigatória | obrigatória; chave do Alethe salva |
+| Túnel público | desligado | desligado |
+| Atualização automática | ativa | desligada (`--skip-update`) |
 
-Por que trocar a senha mesmo só aceitando conexões locais: qualquer programa no PC, ou uma página
-maliciosa aberta no navegador, consegue fazer pedidos para `127.0.0.1`. Porta trocada + senha
-forte + chave obrigatória são camadas que se somam.
+Por que tudo isso mesmo só local: qualquer programa no PC, ou uma página maliciosa no navegador,
+consegue fazer pedidos para `127.0.0.1`. As camadas se somam.
 
-### Verificação feita em 15/10/2026
+### 4.2 Verificação (15/10/2026)
 
 | Teste | Resultado |
 |---|---|
-| Escuta | só `127.0.0.1:41010`; IP da rede recusado |
-| Senha do painel | própria (hash no banco), `123456` não vale mais |
+| Porta | escuta só em `127.0.0.1:41010`; pelo IP da rede é recusado |
 | `POST /v1/chat/completions` sem chave / chave falsa | 401 / 401 |
-| Com a chave do Alethe | aceita (404 só porque ainda não há provedor) |
-| `GET /v1/models` | público por design do 9router: lista o catálogo, sem gastar tokens |
+| Com a chave do Alethe | aceita |
+| `GET /v1/models` | público por design: lista o catálogo, sem gastar tokens |
+| Teste unitário `router9::cli_args_tests` | passou |
 
-## Conexões do 9router: teste real (15/10/2026)
+### 4.3 Assinaturas por OAuth (decisão D-005)
 
-9 conexões, 86 modelos no catálogo. Teste: um pedido mínimo por modelo, via `127.0.0.1:41010`.
+Claude, Codex, Antigravity, GitHub Copilot, Gemini CLI e Cline estão conectados por **login de conta**.
+Decisão do Victor: **manter e somar** ([DECISOES.md](./DECISOES.md#d-005)). Riscos aceitos: os termos desses
+serviços restringem uso por proxy (possível suspensão) e os tokens de login ficam no banco do 9router.
+Cuidados: não expor `9router-data` em backups públicos; acompanhar avisos nos painéis das contas;
+lembrar que o que passa pelo 9router gasta **a mesma cota** da assinatura usada direto.
 
-| Prefixo | Conexão | Tipo | Funcionou | Falhou (motivo) |
+## 5. Conexões testadas
+
+9 conexões, 86 modelos no catálogo. Um pedido mínimo por modelo, via `127.0.0.1:41010`.
+
+| Prefixo | Conexão | Tipo | ✅ Funcionou | ❌ Falhou (motivo) |
 |---|---|---|---|---|
-| `cc/` | Claude (assinatura) | OAuth | ✅ `claude-opus-5` (1,6 s), `claude-sonnet-5` (1,8 s) | — |
-| `cx/` | Codex (conta OpenAI) | OAuth | ✅ `gpt-5.6-sol` (2,8 s), `gpt-5.6-terra` (4,0 s) | `gpt-5.4-mini`: não suportado nessa conta |
-| `ag/` | Antigravity | OAuth | ✅ `gemini-3-flash` (1,1 s) | `gemini-3.7-flash-high` e `gemini-pro-agent`: 404. `claude-sonnet-4-6`: descontinuado |
-| `gh/` | GitHub Copilot | OAuth | ✅ `gpt-4.1` (0,6 s) | `gpt-5-mini`, `claude-haiku-4.5`, `gpt-5.4-mini-free-auto`: não suportados no plano |
-| `openrouter/` | OpenRouter | chave | ✅ `nvidia/nemotron-3-super-120b-a12b:free` (1,1 s), `nemotron-3.5-lightning:free`, `cohere/north-mini-code:free` | Gemma 4 / Laguna `:free`: 429 (congestionado) |
-| `gc/` | Gemini CLI | OAuth | ❌ | **403 em todos** ("reset after ~2m"): conta sem permissão ou cota. Investigar |
-| `cl/` | Cline | OAuth | ❌ | 401 (não autorizado) / 402 (sem créditos) |
-| `af/` | api.airforce | chave | ❌ | 402: modelos exigem plano pago |
-| `ps/` | Poolside | chave | ❌ | 404: nome de modelo não reconhecido (ver ids corretos no painel) |
+| `cc/` | Claude | OAuth | `claude-opus-5` (1,6 s), `claude-sonnet-5` (1,8 s) | — |
+| `cx/` | Codex | OAuth | `gpt-5.6-sol` (2,8 s), `gpt-5.6-terra` (4,0 s) | `gpt-5.4-mini`: não suportado na conta |
+| `ag/` | Antigravity | OAuth | `gemini-3-flash` (1,1 s) | `gemini-3.7-flash-high`, `gemini-pro-agent`: 404 · `claude-sonnet-4-6`: descontinuado |
+| `gh/` | GitHub Copilot | OAuth | `gpt-4.1` (0,6 s) | `gpt-5-mini`, `claude-haiku-4.5`, `gpt-5.4-mini-free-auto`: fora do plano |
+| `openrouter/` | OpenRouter | chave | `nvidia/nemotron-3-super-120b-a12b:free` (1,1 s), `nvidia/nemotron-3.5-lightning:free`, `cohere/north-mini-code:free` | Gemma 4 e Laguna `:free`: 429 (congestionados) · `openrouter/auto`: 402 (sem crédito) |
+| `gc/` | Gemini CLI | OAuth | — | **403 em todos** ("reset after ~2m"): conta sem permissão/cota. **A investigar** |
+| `cl/` | Cline | OAuth | — | 401 (não autorizado) / 402 (sem crédito) |
+| `af/` | api.airforce | chave | — | 402: modelos exigem plano pago |
+| `ps/` | Poolside | chave | — | 404: id de modelo não reconhecido |
 
-Correção: o **Gemini CLI segue ativo** (https://geminicli.com). A informação de que teria sido desligado veio de uma fonte só e estava errada.
+O Gemini CLI segue ativo (https://geminicli.com): uma informação anterior de que teria sido desligado estava errada.
 
-## Combos de fallback (desenho validado)
+### Notas sobre o OpenRouter
+- Nome no 9router: **`openrouter/<id do OpenRouter>`**.
+- O catálogo do 9router **não lista** os modelos do OpenRouter. Os ids vêm de `https://openrouter.ai/api/v1/models` (grátis = `:free` com preço 0). Em 15/10 eram 14 e mudam com frequência.
+- Muitos modelos grátis "pensam" antes de responder: use `max_tokens` de pelo menos ~500, senão o conteúdo vem vazio.
+- O 9router responde em streaming (SSE) por padrão.
 
-Só modelos que responderam no teste. Ordem: **melhor primeiro**, grátis no fim, **Ollama por último** (quando for adicionado).
-Criar no painel do 9router em **Combos** com exatamente estes nomes e ordem.
+## 6. Combos de fallback
 
-| Combo | Papel no orquestrador | Ordem dos modelos |
+Só modelos que responderam. Ordem: **melhor primeiro**, grátis no fim, **Ollama sempre por último**.
+Criar no painel do 9router (**Combos**) com estes nomes e esta ordem.
+
+| Combo | Papel no orquestrador | Ordem |
 |---|---|---|
-| **`alethe-topo`** | Planejador, `expert`, `deep` | `cc/claude-opus-5` → `cx/gpt-5.6-sol` → `cc/claude-sonnet-5` → `cx/gpt-5.6-terra` → `ag/gemini-3-flash` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` |
-| **`alethe-builder`** | `builder`, `writer` | `cc/claude-sonnet-5` → `cx/gpt-5.6-terra` → `gh/gpt-4.1` → `ag/gemini-3-flash` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` |
-| **`alethe-rapido`** | `scout`, `typist` | `ag/gemini-3-flash` → `gh/gpt-4.1` → `openrouter/nvidia/nemotron-3.5-lightning:free` → `openrouter/cohere/north-mini-code:free` |
+| **`alethe-topo`** | planejador, `expert`, `deep` | `cc/claude-opus-5` → `cx/gpt-5.6-sol` → `cc/claude-sonnet-5` → `cx/gpt-5.6-terra` → `ag/gemini-3-flash` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` → *(Ollama)* |
+| **`alethe-builder`** | `builder`, `writer` | `cc/claude-sonnet-5` → `cx/gpt-5.6-terra` → `gh/gpt-4.1` → `ag/gemini-3-flash` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` → *(Ollama)* |
+| **`alethe-rapido`** | `scout`, `typist` | `ag/gemini-3-flash` → `gh/gpt-4.1` → `openrouter/nvidia/nemotron-3.5-lightning:free` → `openrouter/cohere/north-mini-code:free` → *(Ollama)* |
 
-A ordem entre GPT-5.6 Sol/Terra e Claude é hipótese inicial: validar na primeira orquestração real
-(qualidade, tempo e cota) e ajustar.
-### OpenRouter no 9router (15/10/2026)
+A ordem entre Claude e GPT-5.6 é hipótese inicial: validar na primeira orquestração real (qualidade, tempo, cota).
+Quando o Gemini CLI, Gemini AI Studio ou Groq passarem no teste, entram nos combos antes dos `:free`.
 
-- Nome do modelo no 9router: **`openrouter/<id do OpenRouter>`**. Ex.: `openrouter/nvidia/nemotron-3-super-120b-a12b:free`.
-- O catálogo `/v1/models` do 9router **não lista** os modelos do OpenRouter: use os ids da lista pública `https://openrouter.ai/api/v1/models` (filtrar `:free` com preço 0).
-- Modelos grátis mudam: em 15/10 eram 14 (Nemotron 3 Super/Ultra/Lightning, Gemma 4, Laguna, Inkling, North Mini Code, Dots...). O Llama 3.3 70B `:free` já não era grátis.
-- Resultados do teste: Nemotron Super 120B, Nemotron 3.5 Lightning e North Mini Code responderam; Gemma 4 31B e Laguna deram **429** (congestionados); Inkling Small deu 403.
-- `openrouter/openrouter/auto` dá **402** (sem créditos): ele escolhe modelos pagos.
-- Vários modelos grátis "pensam" antes de responder: `max_tokens` baixo (ex.: 20) acaba no raciocínio e o conteúdo vem vazio. Use pelo menos ~500.
-- O 9router responde em **streaming (SSE)** por padrão.
-## Agentes × provedores (estratégia, 15/10/2026)
+**Dados de clientes ou prefeitura** não vão para modelos grátis (podem virar treino): só provedor com
+contrato/termos de privacidade adequados ou Ollama local.
 
-Agentes são os **programas que trabalham**; provedores são os **modelos que pensam**; o 9router escolhe o provedor.
+## 7. Agentes no Alethe
 
-| Agente | Como conecta | Uso |
-|---|---|---|
-| Claude Code | Direto na assinatura Claude Pro (sem 9router) | Tarefas pesadas, planejamento |
-| Codex | Direto na conta OpenAI | Revisão, segunda opinião |
-| OpenCode | **Via 9router** → provedores grátis/baratos | Tarefas simples e em volume |
-| Antigravity CLI (`agy`) | Agente personalizado no Alethe; conta Google própria | Gemini (padrão Gemini 3.5 Flash) |
-| Freebuff | Agente personalizado no Alethe; conta paga própria (backend Codebuff) | Tarefas de código rápidas |
-
-**Nunca** ligar assinatura pessoal (Claude Pro, ChatGPT) dentro do 9router por login de conta: viola os termos. No 9router, só chaves de API oficiais.
-
-### Ordem dos provedores no 9router (combo de fallback)
-
-1. **OpenRouter** (chave oficial; modelos `:free` + pagos baratos)
-2. Google AI Studio (Gemini)
-3. Groq
-4. **Ollama por último**: usa a máquina local (preferência do Victor)
-
-Dados de clientes ou prefeitura: não vão para camadas grátis (podem virar treino).
-
-## Caveman (economia de tokens no agente)
-
-Repositório: [JuliusBrussee/caveman](https://github.com/juliusbrussee/caveman) (Apache-2.0/MIT). Atua **dentro do agente**, não no gateway.
-
-| Módulo | O que faz | Números declarados pelo projeto | Usar? |
+| Agente | Instalado | Como conecta (padrão) | Uso |
 |---|---|---|---|
-| Say less | Respostas curtas; código, comandos e erros intactos; nunca reescreve o prompt | 10 perguntas no Opus 5.5: 6.983 → 4.119 tokens de saída (`/caveman`), 2.693 (`/ultracave`) | ✅ Testar |
-| Read less | Comprime logs, JSON, CSV, YAML e saídas de teste antes do modelo ler | −33,2% de entrada em 54 sessões, 18/18 corretas. **Piora em HTML (+9,9%)** | ✅ Testar, sem HTML |
-| Auto | Escolhe modelo e esforço por pedido | −54% de custo com acerto parecido (resultado parcial, ±7 pts) | ⚠️ Envia o conteúdo para a Caveman Cloud: **não usar com dados sensíveis** |
-| Blocks | Reaproveita scripts | pré-lançamento | ❌ Esperar |
-| caveman-compress | Comprime memórias como `CLAUDE.md` | — | 🧪 |
+| Claude Code | ✅ | Direto na assinatura | Tarefas pesadas, planejamento |
+| Codex | ✅ | Direto na conta OpenAI | Revisão, segunda opinião |
+| OpenCode | ✅ | **Via 9router** (`alethe-rapido`) | Tarefas simples e em volume |
+| Antigravity CLI (`agy`) | ✅ `%LOCALAPPDATA%\agy\bin` | Direto na conta Google · ⏳ cadastrar como agente personalizado | Gemini (padrão Gemini 3.5 Flash) |
+| Freebuff | ✅ | Direto, **conta paga** (backend Codebuff) · ⏳ cadastrar como agente personalizado | Código rápido |
+| Gemini CLI | via 9router (`gc/`) | ⏳ resolver 403 | Gemini Pro |
 
-Cuidados: telemetria ligada por padrão (`caveman telemetry off` ou `DO_NOT_TRACK=1`); as regras custam ~1.160 tokens de entrada (não compensa quem paga por requisição); números são do próprio projeto, e vamos medir com o mesmo roteiro antes/depois.
-Agentes suportados: Claude Code, Codex, OpenCode, Gemini CLI e outros.
+Como o Alethe liga um agente ao 9router (`src/lib/router9.ts`): Claude Code recebe `ANTHROPIC_BASE_URL`;
+Codex e OpenCode recebem `OPENAI_BASE_URL`. Só acontece quando o 9router está ligado para aquele
+terminal. A opção "usar 9router por padrão em agentes novos" está **desligada** (manter assim).
 
-**Instalação feita (15/10/2026):** plugin `caveman@caveman` v4.0.1 no Claude Code (escopo usuário), com hooks SessionStart/SubagentStart/UserPromptSubmit/SessionEnd. `defaultMode: "off"` em `%APPDATA%\caveman\config.json` (conferido: resolve `off`). Ligar por sessão com `/caveman`, `/ultracave` ou `/megacave`, e desligar com `/caveman off`. Por projeto: `.caveman/config.json` com `{"defaultMode":"caveman"}`. Por terminal: variável `CAVEMAN_DEFAULT_MODE`. O instalador completo (`npx @caveman-ai/cli`) **não foi usado**: ele configura um proxy via `ANTHROPIC_BASE_URL`, o que conflita com o 9router.
-## Desenho alvo
+Agentes personalizados: Configurações → **Terminal e agentes** → **Agentes personalizados** → `id`, nome e comando
+(ex.: `agy` / Antigravity / `agy`; `freebuff` / Freebuff / `freebuff`).
 
-Ver `diagramas/conexoes-provedores.drawio` (abrir no draw.io) e `diagramas/conexoes-provedores.excalidraw`.
+## 8. Economia de tokens
 
-```text
- Alethe (planejador + workers) ──┐
- Claude Code / Codex / OpenCode ─┼──►  9router :20128  ──►  Anthropic · OpenAI · Google · DeepSeek
- Freebuff / Hermes / OpenClaw ───┘     (1 gateway só)  └──►  Ollama local :11434 (O:\data\ollama)
+### 8.1 Caveman (dentro do agente)
+[JuliusBrussee/caveman](https://github.com/juliusbrussee/caveman) · Apache-2.0/MIT.
+
+| Módulo | O que faz | Números *autodeclarados* | Situação |
+|---|---|---|---|
+| Say less | Respostas curtas; código, comandos e erros intactos | 10 perguntas (Opus 5.5): 6.983 → 4.119 tokens (`/caveman`), 2.693 (`/ultracave`) | ✅ instalado |
+| Read less | Comprime logs, JSON, CSV, YAML, saídas de teste | −33,2% de entrada (54 sessões); piora em HTML (+9,9%) | ⏸️ usa proxy via `ANTHROPIC_BASE_URL`, que conflita com o 9router |
+| Auto | Escolhe modelo e esforço | −54% de custo (parcial, ±7 pts) | ❌ envia conteúdo à Caveman Cloud |
+| Blocks | Reaproveita scripts | pré-lançamento | ❌ esperar |
+
+**Instalação feita:** plugin `caveman@caveman` 4.0.1 no Claude Code, **desligado por padrão**
+(`%APPDATA%\caveman\config.json` → `{"defaultMode":"off"}`, conferido), telemetria off (`DO_NOT_TRACK=1`).
+Ligar: `/caveman`, `/ultracave`, `/megacave` · desligar: `/caveman off` · por projeto: `.caveman/config.json` ·
+por terminal: `CAVEMAN_DEFAULT_MODE=caveman` (ideal para agentes trabalhadores).
+**Falta:** medir com o mesmo roteiro, com e sem.
+
+### 8.2 No gateway
+- **9router**: troca para modelo mais barato/grátis via combos.
+- **OmniRoute** (🧪): compressão de 15-95% *autodeclarada*; testar contra o 9router com a mesma tarefa.
+
+## 9. Ferramentas avaliadas
+
+| Ferramenta | Categoria | Veredito |
+|---|---|---|
+| **9router** | Gateway | ✅ **em uso** (seção 4) |
+| **OmniRoute** | Gateway + compressão | 🧪 testar a compressão contra o 9router |
+| **LiteLLM** | Gateway (`tools/litellm`, porta 41000) | ⚠️ terceiro gateway: decidir manter ou desligar (D-006) |
+| **Ollama** | Provedor local (`O:\data\ollama`) | ✅ entra **por último** nos combos (usa a máquina) |
+| **AirLLM** | Inferência local camada por camada | ❌ lento demais para agentes |
+| **Caveman** | Compressão no agente | ✅ instalado (seção 8) |
+| **Hermes Agent** | Agente autônomo (Nous Research) | ⚠️ Bloco 2, só em sandbox Docker |
+| **OpenClaw** | Orquestrador/agente | ⚠️ Bloco 2, só em sandbox Docker |
+
+O estudo de caso Toolzz Voice foi para o projeto próprio: `PROJETOS/voz-agentes/docs/REFERENCIA-TOOLZZ.md`.
+
+## 10. CPU e memória
+
+- **Gateway**: processo Node leve (dezenas de MB).
+- **Agente CLI**: ~150-400 MB cada → 10 agentes ≈ 2-4 GB. Terminais fora da tela não renderizam e podem ser suspensos.
+- **Modelo na nuvem**: zero de CPU local; o custo é cota/tokens.
+- **Ollama**: é o que pesa no PC (i7-3770S, 16 GB, RX 580), por isso fica por último.
+
+| Cenário | RAM do app | RAM dos agentes | CPU | Medido em |
+|---|---|---|---|---|
+| App aberto, 0 agentes | ⏳ | ⏳ | ⏳ | |
+| 3 agentes | ⏳ | ⏳ | ⏳ | |
+| 10 agentes | ⏳ | ⏳ | ⏳ | |
+
+## 11. Como testar um provedor novo
+
+```powershell
+& 'O:\DEV\A JORNADA\tools\testar-modelos-9router.ps1' -Models 'prefixo/modelo','outro/modelo'
 ```
 
-## CPU e memória: onde está o custo de verdade
+Mostra HTTP, tempo e o início da resposta de cada modelo. Depois: atualizar a tabela da seção 5 e, se passou, encaixar no combo.
 
-- **Gateway** (9router/OmniRoute): processo Node leve, dezenas de MB. Não é gargalo.
-- **Agente CLI** (Claude Code, Codex): cada um é um processo Node com **~150-400 MB**. 10 agentes ≈ 2-4 GB.
-  O Alethe ajuda porque terminais fora da tela não renderizam e podem ser **suspensos** (`suspend_pty`).
-- **Modelo na nuvem**: custo zero de CPU/RAM local, o custo é de tokens/cota.
-- **Modelo local (Ollama)**: é aqui que o PC pesa (VRAM/RAM e CPU). Usar modelos pequenos para tarefas simples.
-- **Sem limites não existe**: o teto real é RAM e cota de API. A tabela abaixo vai mostrar o seu teto.
-
-| Cenário | RAM do app | RAM total dos agentes | CPU | Medido em |
-|---|---|---|---|---|
-| App aberto, 0 agentes | | | | |
-| 3 agentes | | | | |
-| 10 agentes | | | | |
-
-## Estudo de caso: Toolzz Voice
-
-Plataforma brasileira de **agentes de voz** que fazem e recebem ligações (prospecção, cobrança,
-agendamento, URA), também por WhatsApp e Instagram. Planos a partir de R$ 899/mês (1.000 min).
-Stack citada: OpenAI, Gemini, Anthropic; ElevenLabs (clonagem de voz); PABX/VoIP (Asterisk, 3CX);
-CRMs (HubSpot, Salesforce, Pipedrive); Zapier/Make; API REST.
-**O que aprender:** é o padrão "squad de agentes + canal de voz + integrações de negócio". As peças
-abertas equivalentes (STT, LLM, TTS, telefonia SIP) entram no Bloco 3.
-
-## Fontes
+## 12. Fontes
 
 - 9router: [README no npm](https://cdn.jsdelivr.net/npm/9router@0.3.72/README.md) · [docs](https://docs.9router.com/) · [análise](https://mer.vin/2026/05/9router-one-openai-compatible-gateway-for-claude-code-codex-cursor-and-multi-provider-fallbacks/)
-- OmniRoute: [DEV Community](https://dev.to/terminalchai/omniroute-the-open-source-ai-gateway-slashing-token-costs-by-95-2nfd) · [review](https://dev.to/andrew-ooo/omniroute-free-ai-gateway-with-231-llm-providers-2026-review-1bbg) · [dev.co](https://dev.co/ai/mcp/omniroute)
-- AirLLM: [blog do autor](https://huggingface.co/blog/lyogavin/airllm) · [PyPI](https://pypi.org/project/airllm) · [análise de VRAM](https://wavect.io/blog/airllm-layer-wise-inference-low-vram.md)
-- Hermes Agent: [docs](https://agentic-ai.readthedocs.io/en/latest/AgentPlatforms/hermes-agent/) · [site](https://hermes-agent.org/about/)
-- OpenClaw: [arquitetura](https://bibek-poudel.medium.com/how-openclaw-works-understanding-ai-agents-through-a-real-architecture-5d59cc7a4764) · [explicação](https://operator.io/blog/what-is-openclaw)
-- Freebuff: [Y Combinator](https://www.ycombinator.com/companies/freebuff) · [guia](https://www.bitdoze.com/freebuff-free-ai-coding-agent/)
-- Toolzz Voice: [página oficial](https://www.toolzz.com.br/voice)
+- OmniRoute: [DEV Community](https://dev.to/terminalchai/omniroute-the-open-source-ai-gateway-slashing-token-costs-by-95-2nfd) · [review](https://dev.to/andrew-ooo/omniroute-free-ai-gateway-with-231-llm-providers-2026-review-1bbg)
+- Caveman: [repositório](https://github.com/juliusbrussee/caveman)
+- Antigravity CLI: [codelab Google](https://codelabs.developers.google.com/antigravity-cli-hands-on?hl=en) · Gemini CLI: [geminicli.com](https://geminicli.com/)
+- OpenRouter: [lista de modelos](https://openrouter.ai/api/v1/models)
+- AirLLM: [blog do autor](https://huggingface.co/blog/lyogavin/airllm)
+- Hermes Agent: [docs](https://agentic-ai.readthedocs.io/en/latest/AgentPlatforms/hermes-agent/) · OpenClaw: [explicação](https://operator.io/blog/what-is-openclaw)
+- Freebuff: [Y Combinator](https://www.ycombinator.com/companies/freebuff)

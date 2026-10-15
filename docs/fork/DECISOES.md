@@ -33,6 +33,7 @@ disponíveis em `asciiRecipes.ts` para usos futuros.
 **Decisão:** mover para `O:\dev\A JORNADA\PROJETOS\alethe`.
 **Consequência:** caminho curto e independente. O cache Rust foi recriado do zero.
 
+<a id="d-005"></a>
 ## D-005 — Assinaturas por OAuth no 9router: mantidas (15/10/2026)
 
 **Contexto:** além das chaves de API (OpenRouter), o 9router recebeu conexões por login de conta:
