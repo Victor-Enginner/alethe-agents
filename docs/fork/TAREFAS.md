@@ -106,7 +106,7 @@ Desenho completo em [ARQUITETURA.md §10](./ARQUITETURA.md#10-hermes-e-openclaw-
 - [ ] Teste: "o que falta na sprint atual?" lendo DIARIO/TAREFAS (montados somente leitura)
 
 ### Sprint 2.3 — OpenClaw
-- [ ] Ler a documentação oficial e o repositório antes de instalar
+- [ ] Ler a documentação oficial e o repositório oficial ([openclaw/openclaw](https://github.com/openclaw/openclaw)) antes de instalar
 - [ ] Container isolado, mesmo padrão do Hermes
 - [ ] Gateway apontando para o 9router
 - [ ] Canal WhatsApp/Telegram
@@ -117,6 +117,11 @@ Desenho completo em [ARQUITETURA.md §10](./ARQUITETURA.md#10-hermes-e-openclaw-
 - [ ] Regras de roteamento por cota (`QuotaGate`) no orquestrador do Alethe
 - [ ] Comparar orquestrador do Alethe × Hermes × OpenClaw e registrar D-007 (quando usar cada um)
 - [ ] Etapa 1 da trilha de estudo: comando Rust `ola` + botão (entender `invoke`)
+
+## Projeto paralelo — Biblioteca arXiv offline
+
+- [x] Plano escrito: `PROJETOS/biblioteca-arxiv/docs/PLANO.md` — ok 15/10
+- [ ] Fases 1 a 3: metadados (OAI-PMH) → PDFs selecionados + leitor → servidor MCP para os agentes
 
 ## Bloco 3 — Automações reais
 
