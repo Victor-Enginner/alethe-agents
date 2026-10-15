@@ -58,6 +58,43 @@ forte + chave obrigatória são camadas que se somam.
 | Com a chave do Alethe | aceita (404 só porque ainda não há provedor) |
 | `GET /v1/models` | público por design do 9router: lista o catálogo, sem gastar tokens |
 
+## Agentes × provedores (estratégia, 15/10/2026)
+
+Agentes são os **programas que trabalham**; provedores são os **modelos que pensam**; o 9router escolhe o provedor.
+
+| Agente | Como conecta | Uso |
+|---|---|---|
+| Claude Code | Direto na assinatura Claude Pro (sem 9router) | Tarefas pesadas, planejamento |
+| Codex | Direto na conta OpenAI | Revisão, segunda opinião |
+| OpenCode | **Via 9router** → provedores grátis/baratos | Tarefas simples e em volume |
+| Antigravity CLI (`agy`) | Agente personalizado no Alethe; conta Google própria | Gemini (padrão Gemini 3.5 Flash) |
+| Freebuff | Agente personalizado no Alethe; conta paga própria (backend Codebuff) | Tarefas de código rápidas |
+
+**Nunca** ligar assinatura pessoal (Claude Pro, ChatGPT) dentro do 9router por login de conta: viola os termos. No 9router, só chaves de API oficiais.
+
+### Ordem dos provedores no 9router (combo de fallback)
+
+1. **OpenRouter** (chave oficial; modelos `:free` + pagos baratos)
+2. Google AI Studio (Gemini)
+3. Groq
+4. **Ollama por último**: usa a máquina local (preferência do Victor)
+
+Dados de clientes ou prefeitura: não vão para camadas grátis (podem virar treino).
+
+## Caveman (economia de tokens no agente)
+
+Repositório: [JuliusBrussee/caveman](https://github.com/juliusbrussee/caveman) (Apache-2.0/MIT). Atua **dentro do agente**, não no gateway.
+
+| Módulo | O que faz | Números declarados pelo projeto | Usar? |
+|---|---|---|---|
+| Say less | Respostas curtas; código, comandos e erros intactos; nunca reescreve o prompt | 10 perguntas no Opus 5.5: 6.983 → 4.119 tokens de saída (`/caveman`), 2.693 (`/ultracave`) | ✅ Testar |
+| Read less | Comprime logs, JSON, CSV, YAML e saídas de teste antes do modelo ler | −33,2% de entrada em 54 sessões, 18/18 corretas. **Piora em HTML (+9,9%)** | ✅ Testar, sem HTML |
+| Auto | Escolhe modelo e esforço por pedido | −54% de custo com acerto parecido (resultado parcial, ±7 pts) | ⚠️ Envia o conteúdo para a Caveman Cloud: **não usar com dados sensíveis** |
+| Blocks | Reaproveita scripts | pré-lançamento | ❌ Esperar |
+| caveman-compress | Comprime memórias como `CLAUDE.md` | — | 🧪 |
+
+Cuidados: telemetria ligada por padrão (`caveman telemetry off` ou `DO_NOT_TRACK=1`); as regras custam ~1.160 tokens de entrada (não compensa quem paga por requisição); números são do próprio projeto, e vamos medir com o mesmo roteiro antes/depois.
+Agentes suportados: Claude Code, Codex, OpenCode, Gemini CLI e outros.
 ## Desenho alvo
 
 Ver `diagramas/conexoes-provedores.drawio` (abrir no draw.io) e `diagramas/conexoes-provedores.excalidraw`.

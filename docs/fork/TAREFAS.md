@@ -33,7 +33,12 @@ Cada sessão termina com: diário atualizado, commit + push. O "DIA XX/100" da s
 - [x] Travas nos padrões seguros: requireLogin e requireApiKey ligados, nenhum túnel ativo — ok 15/10
 - [x] Chave de API do Alethe salva; testado: sem chave = 401, chave falsa = 401, chave real = aceita — ok 15/10
 - [ ] Ligar Claude Code e Codex passando pelo 9router; ver o uso na topbar
-- [ ] Conectar Ollama local (modelos em `O:\data\ollama`) como provedor no 9router
+- [ ] Conectar OpenRouter no 9router (chave oficial) e testar via OpenCode
+- [ ] Antigravity CLI (`agy`): instalar e cadastrar como agente personalizado no Alethe
+- [ ] Freebuff (conta paga): cadastrar como agente personalizado no Alethe
+- [ ] 🧪 Caveman: medir say less + read less (antes/depois) no Claude Code e no OpenCode
+- [ ] Gemini (AI Studio) e Groq como fallback no combo
+- [ ] Ollama local no fim do combo (por último: usa a máquina)
 - [ ] Medir RAM/CPU: app parado, 3 agentes, 10 agentes (tabela no PROVEDORES.md)
 - [ ] 🧪 Teste comparativo: 9router × OmniRoute (compressão real em tokens, mesma tarefa)
 - [ ] Decidir o gateway oficial (D-005) e desligar o que sobrar (LiteLLM?)
