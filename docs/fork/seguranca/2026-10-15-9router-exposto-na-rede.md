@@ -39,7 +39,7 @@ Teste unitário: `router9::cli_args_tests::binds_loopback_on_the_requested_port`
 
 ## Verificação
 
-- [ ] `cargo test cli_args_tests`
+- [x] `cargo test cli_args_tests`: 1 passou — ok 15/10
 - [x] App recompilado: porta 41010 escuta **só em 127.0.0.1** — ok 15/10
 - [x] Nada escutando em 0.0.0.0:20128; conexão pelo IP da rede (192.168.x.x:41010) recusada — ok 15/10
 - [x] Log sem o aviso "Network-exposed"; processo segue rodando em modo tray — ok 15/10
