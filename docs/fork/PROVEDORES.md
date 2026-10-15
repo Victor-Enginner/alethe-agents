@@ -58,6 +58,37 @@ forte + chave obrigatória são camadas que se somam.
 | Com a chave do Alethe | aceita (404 só porque ainda não há provedor) |
 | `GET /v1/models` | público por design do 9router: lista o catálogo, sem gastar tokens |
 
+## Conexões do 9router: teste real (15/10/2026)
+
+9 conexões, 86 modelos no catálogo. Teste: um pedido mínimo por modelo, via `127.0.0.1:41010`.
+
+| Prefixo | Conexão | Tipo | Funcionou | Falhou (motivo) |
+|---|---|---|---|---|
+| `cc/` | Claude (assinatura) | OAuth | ✅ `claude-opus-5` (1,6 s), `claude-sonnet-5` (1,8 s) | — |
+| `cx/` | Codex (conta OpenAI) | OAuth | ✅ `gpt-5.6-sol` (2,8 s), `gpt-5.6-terra` (4,0 s) | `gpt-5.4-mini`: não suportado nessa conta |
+| `ag/` | Antigravity | OAuth | ✅ `gemini-3-flash` (1,1 s) | `gemini-3.7-flash-high` e `gemini-pro-agent`: 404. `claude-sonnet-4-6`: descontinuado |
+| `gh/` | GitHub Copilot | OAuth | ✅ `gpt-4.1` (0,6 s) | `gpt-5-mini`, `claude-haiku-4.5`, `gpt-5.4-mini-free-auto`: não suportados no plano |
+| `openrouter/` | OpenRouter | chave | ✅ `nvidia/nemotron-3-super-120b-a12b:free` (1,1 s), `nemotron-3.5-lightning:free`, `cohere/north-mini-code:free` | Gemma 4 / Laguna `:free`: 429 (congestionado) |
+| `gc/` | Gemini CLI | OAuth | ❌ | **403 em todos** ("reset after ~2m"): conta sem permissão ou cota. Investigar |
+| `cl/` | Cline | OAuth | ❌ | 401 (não autorizado) / 402 (sem créditos) |
+| `af/` | api.airforce | chave | ❌ | 402: modelos exigem plano pago |
+| `ps/` | Poolside | chave | ❌ | 404: nome de modelo não reconhecido (ver ids corretos no painel) |
+
+Correção: o **Gemini CLI segue ativo** (https://geminicli.com). A informação de que teria sido desligado veio de uma fonte só e estava errada.
+
+## Combos de fallback (desenho validado)
+
+Só modelos que responderam no teste. Ordem: **melhor primeiro**, grátis no fim, **Ollama por último** (quando for adicionado).
+Criar no painel do 9router em **Combos** com exatamente estes nomes e ordem.
+
+| Combo | Papel no orquestrador | Ordem dos modelos |
+|---|---|---|
+| **`alethe-topo`** | Planejador, `expert`, `deep` | `cc/claude-opus-5` → `cx/gpt-5.6-sol` → `cc/claude-sonnet-5` → `cx/gpt-5.6-terra` → `ag/gemini-3-flash` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` |
+| **`alethe-builder`** | `builder`, `writer` | `cc/claude-sonnet-5` → `cx/gpt-5.6-terra` → `gh/gpt-4.1` → `ag/gemini-3-flash` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` |
+| **`alethe-rapido`** | `scout`, `typist` | `ag/gemini-3-flash` → `gh/gpt-4.1` → `openrouter/nvidia/nemotron-3.5-lightning:free` → `openrouter/cohere/north-mini-code:free` |
+
+A ordem entre GPT-5.6 Sol/Terra e Claude é hipótese inicial: validar na primeira orquestração real
+(qualidade, tempo e cota) e ajustar.
 ### OpenRouter no 9router (15/10/2026)
 
 - Nome do modelo no 9router: **`openrouter/<id do OpenRouter>`**. Ex.: `openrouter/nvidia/nemotron-3-super-120b-a12b:free`.
