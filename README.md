@@ -115,6 +115,7 @@ Registro de tudo que muda em relação ao original. Cada mudança entra aqui e n
 | 14/10/2026 | **Fundo da home em carrossel de receitas ASCII** (adaptadas do [21st.dev](https://21st.dev/community/ascii)): Robot + Human, Mosaic e Vapor Halftone, com troca a cada 12 s e cross-fade. O motor `ascii-effect` ganhou a animação `shimmer` e os modos `mosaic` (blocos) e `dots` (halftone); vinheta, grão, bloom e tint são camadas CSS. Receitas em `src/components/HomeView/asciiRecipes.ts` | `0ba5d76` |
 | 14/10/2026 | **Carrossel passa a usar exports em vídeo do 21st**, com a arte idêntica à da galeria: 3 slides ASCII verdes + Van Gogh (Starry Nights), em loop local em `src/assets/home-bg/` (a CSP bloqueia mídia remota). As receitas ao vivo continuam disponíveis em `asciiRecipes.ts`, fora do carrossel | `86b7770` |
 | 14/10/2026 | **Marco 0** salvo (tag `marco-0-2026-10-14` + backup). Projeto movido para pasta própria. Criada `docs/fork/` com roadmap de 12 meses, diário, decisões e marcos | `8fd42f4` |
+| 15/10/2026 | Guia de arquitetura em português ([docs/fork/ARQUITETURA.md](./docs/fork/ARQUITETURA.md)): duas metades Tauri, fluxo do PTY, orquestrador, estado, mapa de pastas e trilha de estudo | *este commit* |
 
 ## Roadmap
 

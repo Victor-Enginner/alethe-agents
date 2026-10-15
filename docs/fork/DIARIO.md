@@ -5,6 +5,22 @@ As mais recentes ficam no topo.
 
 ---
 
+## 15/10/2026 — Dia 2: entender a arquitetura
+
+**Feito**
+- Primeira abertura pelo atalho depois da mudança de pasta (o Rust terminou a compilação interrompida).
+- Estudo da arquitetura completa e criação do [ARQUITETURA.md](./ARQUITETURA.md): as duas metades
+  (React e Rust), `invoke` e eventos, fluxo do PTY, orquestrador multiagente, estado, mapa de pastas.
+
+**Aprendizados**
+- 321 comandos Tauri ligam a interface ao Rust; o texto dos agentes chega por eventos `pty://data/{id}`.
+- Terminais fora da tela não emitem texto, só acumulam, e é isso que deixa rodar muitos agentes.
+- O orquestrador é um núcleo independente do Tauri: um planejador delega jobs via ferramentas MCP
+  `alethe_*`, e um roteador escolhe o papel (scout, builder, expert...) por tipo, esforço e cota.
+- O `AGENTS.md` do autor tem regras da casa que o fork ainda não segue (seção 9 do guia).
+
+**Próximo passo**
+- Trilha de estudo, etapa 1: criar um comando Rust simples e chamá-lo da interface.
 ## 14/10/2026 — Dia 1: nasce o fork
 
 **Feito**

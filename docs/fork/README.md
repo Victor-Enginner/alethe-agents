@@ -4,6 +4,7 @@ Tudo o que é deste fork fica aqui. O resto de `docs/` é do projeto original.
 
 | Arquivo | Para que serve | Quando atualizar |
 |---|---|---|
+| [ARQUITETURA.md](./ARQUITETURA.md) | Como o app funciona por dentro, com trilha de estudo | Ao descobrir algo novo no código |
 | [ROADMAP.md](./ROADMAP.md) | Para onde o projeto vai: fases, metas e ideias | Ao planejar ou concluir uma etapa |
 | [DIARIO.md](./DIARIO.md) | Registro de cada dia de trabalho | Ao final de cada sessão |
 | [DECISOES.md](./DECISOES.md) | Decisões importantes e o porquê de cada uma | Ao escolher entre caminhos |

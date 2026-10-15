@@ -14,7 +14,7 @@ identidade, que mais tarde sirva de base para uma **DAW** (estação de áudio) 
 ## Fase 1 — Dominar o código (meses 1-2)
 
 - [ ] Entender a arquitetura: stores Zustand, orquestrador Rust, comandos Tauri
-- [ ] Mapa do código em `docs/fork/` (o que cada pasta faz)
+- [x] Mapa do código em [`docs/fork/ARQUITETURA.md`](./ARQUITETURA.md) (15/10/2026)
 - [ ] Primeiras mudanças pequenas na UI para aprender o fluxo
 - [ ] Nomes reais para os slides do carrossel
 
