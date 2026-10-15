@@ -21,6 +21,9 @@ As mais recentes ficam no topo.
 
 **Próximo passo**
 - Trilha de estudo, etapa 1: criar um comando Rust simples e chamá-lo da interface.
+
+---
+
 ## 14/10/2026 — Dia 1: nasce o fork
 
 **Feito**
