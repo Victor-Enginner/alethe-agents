@@ -8,7 +8,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 
 // x, y, w, h in px; color = fill
 const nodes = [
-  { id: 'title', text: 'Conexões de provedores — alvo do Bloco 1 (dias 1-10)', x: 40, y: 10, w: 760, h: 30, color: 'none', title: true },
+  { id: 'title', text: 'Conexões de provedores — alvo do Bloco 1', x: 40, y: 10, w: 760, h: 30, color: 'none', title: true },
 
   { id: 'g-clients', text: 'CLIENTES (quem pede)', x: 40, y: 60, w: 240, h: 380, color: '#f5f5f5', group: true },
   { id: 'alethe', text: 'Alethe\n(planejador + workers)', x: 60, y: 100, w: 200, h: 60, color: '#dae8fc' },
@@ -17,7 +17,7 @@ const nodes = [
   { id: 'auto', text: 'Hermes · OpenClaw\n(só em sandbox Docker)', x: 60, y: 340, w: 200, h: 60, color: '#f8cecc' },
 
   { id: 'gw', text: '9router :20128\nGATEWAY ÚNICO\nfallback · tradução de formato\n(embutido no Alethe)', x: 340, y: 190, w: 200, h: 100, color: '#d5e8d4' },
-  { id: 'omni', text: 'OmniRoute\n🧪 teste de compressão (dia 5)', x: 340, y: 330, w: 200, h: 60, color: '#fff2cc', dashed: true },
+  { id: 'omni', text: 'OmniRoute\n🧪 teste de compressão (3º passo)', x: 340, y: 330, w: 200, h: 60, color: '#fff2cc', dashed: true },
 
   { id: 'g-prov', text: 'PROVEDORES (quem responde)', x: 600, y: 60, w: 220, h: 380, color: '#f5f5f5', group: true },
   { id: 'anth', text: 'Anthropic (Claude)', x: 620, y: 100, w: 180, h: 44, color: '#ffffff' },
@@ -26,7 +26,7 @@ const nodes = [
   { id: 'ds', text: 'DeepSeek · outros', x: 620, y: 280, w: 180, h: 44, color: '#ffffff' },
   { id: 'ollama', text: 'Ollama local :11434\nO:\\data\\ollama', x: 620, y: 350, w: 180, h: 60, color: '#e1d5e7' },
 
-  { id: 'no', text: '❌ AirLLM: fora (lento para agentes)\n⚠️ LiteLLM :41000: decidir no dia 6', x: 340, y: 450, w: 480, h: 50, color: '#ffffff', dashed: true },
+  { id: 'no', text: '❌ AirLLM: fora (lento para agentes)\n⚠️ LiteLLM :41000: decidir após o teste', x: 340, y: 450, w: 480, h: 50, color: '#ffffff', dashed: true },
 ]
 
 const edges = [

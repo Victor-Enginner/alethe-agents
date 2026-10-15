@@ -23,7 +23,7 @@ As mais recentes ficam no topo.
 - Plano de 100 dias em [TAREFAS.md](./TAREFAS.md), dívidas em [DIVIDAS.md](./DIVIDAS.md) e diagrama de conexões em draw.io + Excalidraw.
 
 **Próximo passo**
-- Dia 3: conectar o 9router pelo próprio Alethe e passar Claude Code e Codex por ele.
+- Conectar o 9router pelo próprio Alethe e passar Claude Code e Codex por ele.
 
 ---
 

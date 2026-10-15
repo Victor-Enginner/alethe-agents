@@ -114,22 +114,22 @@ Registro de tudo que muda em relação ao original. Cada mudança entra aqui e n
 | 14/10/2026 | Plugins Tauri do npm alinhados com o Rust (problema #1) | `ee95291` |
 | 14/10/2026 | **Fundo da home em carrossel de receitas ASCII** (adaptadas do [21st.dev](https://21st.dev/community/ascii)): Robot + Human, Mosaic e Vapor Halftone, com troca a cada 12 s e cross-fade. O motor `ascii-effect` ganhou a animação `shimmer` e os modos `mosaic` (blocos) e `dots` (halftone); vinheta, grão, bloom e tint são camadas CSS. Receitas em `src/components/HomeView/asciiRecipes.ts` | `0ba5d76` |
 | 14/10/2026 | **Carrossel passa a usar exports em vídeo do 21st**, com a arte idêntica à da galeria: 3 slides ASCII verdes + Van Gogh (Starry Nights), em loop local em `src/assets/home-bg/` (a CSP bloqueia mídia remota). As receitas ao vivo continuam disponíveis em `asciiRecipes.ts`, fora do carrossel | `86b7770` |
-| 14/10/2026 | **Marco 0** salvo (tag `marco-0-2026-10-14` + backup). Projeto movido para pasta própria. Criada `docs/fork/` com roadmap de 12 meses, diário, decisões e marcos | `8fd42f4` |
+| 14/10/2026 | **Marco 0** salvo (tag `marco-0-2026-10-14` + backup). Projeto movido para pasta própria. Criada `docs/fork/` com roadmap em fases, diário, decisões e marcos | `8fd42f4` |
 | 15/10/2026 | Guia de arquitetura em português ([docs/fork/ARQUITETURA.md](./docs/fork/ARQUITETURA.md)): duas metades Tauri, fluxo do PTY, orquestrador, estado, mapa de pastas e trilha de estudo | `31a5e4f` |
 | 15/10/2026 | Plano **100 dias** ([TAREFAS.md](./docs/fork/TAREFAS.md)), pesquisa de provedores e orquestradores ([PROVEDORES.md](./docs/fork/PROVEDORES.md)), dívidas técnicas e diagramas draw.io + Excalidraw | *este commit* |
 
 ## Roadmap
 
-Plano de 12 meses, com trabalho diário: da fundação a uma UI multiagente própria e, depois, uma DAW com agentes.
+Plano em fases, em ordem e sem prazos fixos, com trabalho diário: da fundação a uma UI multiagente própria e, depois, uma DAW com agentes.
 Detalhes em **[docs/fork/ROADMAP.md](./docs/fork/ROADMAP.md)**. Diário, decisões e marcos (pontos salvos) em **[docs/fork/](./docs/fork/README.md)**.
 
-| Fase | Período | Foco |
+| Fase | Status | Foco |
 |---|---|---|
-| 0 ✅ | out/2026 | Fundação: fork rodando, docs, marco 0, carrossel ASCII |
-| 1 | meses 1-2 | Dominar o código |
-| 2 | meses 2-4 | Identidade própria: nome, logo, tema |
-| 3 | meses 4-8 | Multiagente de verdade e performance |
-| 4 | meses 8-12 | Rumo à DAW |
+| 0 | ✅ concluída | Fundação: fork rodando, docs, marco 0, carrossel ASCII |
+| 1 | a fazer | Dominar o código |
+| 2 | a fazer | Identidade própria: nome, logo, tema |
+| 3 | a fazer | Multiagente de verdade e performance |
+| 4 | a fazer | Rumo à DAW |
 
 Pendências pequenas:
 

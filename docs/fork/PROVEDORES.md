@@ -1,6 +1,6 @@
 # Provedores, gateways e orquestradores
 
-Pesquisa de 15/10/2026. Para cada ferramenta: o que é, o que faz, se serve para nós e em que ordem entra.
+Pesquisa de 15/10/2026. Para cada ferramenta: o que é, o que faz, se serve para nós e em que ordem entra (ordem, não prazo).
 Números marcados como *autodeclarados* vêm do próprio projeto e ainda precisam do nosso teste.
 
 ## Vocabulário em 1 minuto
@@ -16,16 +16,16 @@ Números marcados como *autodeclarados* vêm do próprio projeto e ainda precisa
 
 ## Ferramentas avaliadas
 
-| Ferramenta | Categoria | O que faz | Veredito | Quando |
+| Ferramenta | Categoria | O que faz | Veredito | Ordem |
 |---|---|---|---|---|
-| **9router** | Gateway | Endpoint compatível com OpenAI/Anthropic, traduz entre formatos, fallback entre provedores, dashboard. Porta padrão 20128. MIT | ✅ **Usar primeiro**: já é **embutido no Alethe** (`src-tauri/src/router9.rs`, versão fixada 0.5.59, instala e liga só com clique) | Dia 3 |
-| **OmniRoute** | Gateway + compressão | Mesmo papel do 9router, com motor de compressão (RTK + "Caveman"), *autodeclarado* 15-95% de economia. MIT | 🧪 **Testar contra o 9router.** Redundante como gateway; só vale se a compressão provar ganho real | Dia 5 |
-| **LiteLLM** | Gateway | Já instalado em `tools/litellm`, porta 41000 | ⚠️ Terceiro gateway. Manter só se tiver algo que os outros não têm | Dia 6 |
+| **9router** | Gateway | Endpoint compatível com OpenAI/Anthropic, traduz entre formatos, fallback entre provedores, dashboard. Porta padrão 20128. MIT | ✅ **Usar primeiro**: já é **embutido no Alethe** (`src-tauri/src/router9.rs`, versão fixada 0.5.59, instala e liga só com clique) | 1º |
+| **OmniRoute** | Gateway + compressão | Mesmo papel do 9router, com motor de compressão (RTK + "Caveman"), *autodeclarado* 15-95% de economia. MIT | 🧪 **Testar contra o 9router.** Redundante como gateway; só vale se a compressão provar ganho real | 3º |
+| **LiteLLM** | Gateway | Já instalado em `tools/litellm`, porta 41000 | ⚠️ Terceiro gateway. Manter só se tiver algo que os outros não têm | 4º |
 | **AirLLM** | Inferência local | Roda modelos de 70B em 4 GB de VRAM carregando **uma camada por vez do disco** | ❌ **Não serve para agentes**: lento demais (sem tabela de tokens/s publicada). Para local, usar **Ollama** | — |
-| **Ollama** | Provedor local | Modelos locais, já instalado (modelos em `O:\data\ollama`) | ✅ Entra como provedor no gateway | Dia 4 |
-| **Antigravity** | IDE / agente (Google) | O Alethe já lê sessões e uso (`antigravity_*.rs`, indicador na topbar) | ✅ Nativo | Dia 7 |
-| **OpenCode** | Agente CLI | Suportado nativamente (`opencode_*.rs`) | ✅ Nativo | Dia 7 |
-| **Freebuff** | Agente CLI gratuito | Versão grátis do Codebuff, paga com anúncios no terminal; modelos variam (DeepSeek, Gemini Flash...). `npm i -g freebuff` | 🧪 Bom para tarefas simples e baratas; depende de backend hospedado | Dia 8 |
+| **Ollama** | Provedor local | Modelos locais, já instalado (modelos em `O:\data\ollama`) | ✅ Entra como provedor no gateway | 2º |
+| **Antigravity** | IDE / agente (Google) | O Alethe já lê sessões e uso (`antigravity_*.rs`, indicador na topbar) | ✅ Nativo | 5º |
+| **OpenCode** | Agente CLI | Suportado nativamente (`opencode_*.rs`) | ✅ Nativo | 5º |
+| **Freebuff** | Agente CLI gratuito | Versão grátis do Codebuff, paga com anúncios no terminal; modelos variam (DeepSeek, Gemini Flash...). `npm i -g freebuff` | 🧪 Bom para tarefas simples e baratas; depende de backend hospedado | 6º |
 | **Hermes Agent** | Agente autônomo (Nous Research) | Memória persistente, aprende skills, 70+ ferramentas, conversa por Telegram/Discord/WhatsApp. MIT | ⚠️ Poderoso e com **muitas permissões**: só em sandbox Docker | Bloco 2 |
 | **OpenClaw** | Orquestrador / agente | Processo "Gateway" central, agentes, skills da comunidade, canais de chat, sub-agentes. MIT | ⚠️ Mesmo cuidado: sandbox Docker | Bloco 2 |
 
