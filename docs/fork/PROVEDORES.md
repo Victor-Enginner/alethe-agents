@@ -58,6 +58,15 @@ forte + chave obrigatória são camadas que se somam.
 | Com a chave do Alethe | aceita (404 só porque ainda não há provedor) |
 | `GET /v1/models` | público por design do 9router: lista o catálogo, sem gastar tokens |
 
+### OpenRouter no 9router (15/10/2026)
+
+- Nome do modelo no 9router: **`openrouter/<id do OpenRouter>`**. Ex.: `openrouter/nvidia/nemotron-3-super-120b-a12b:free`.
+- O catálogo `/v1/models` do 9router **não lista** os modelos do OpenRouter: use os ids da lista pública `https://openrouter.ai/api/v1/models` (filtrar `:free` com preço 0).
+- Modelos grátis mudam: em 15/10 eram 14 (Nemotron 3 Super/Ultra/Lightning, Gemma 4, Laguna, Inkling, North Mini Code, Dots...). O Llama 3.3 70B `:free` já não era grátis.
+- Resultados do teste: Nemotron Super 120B, Nemotron 3.5 Lightning e North Mini Code responderam; Gemma 4 31B e Laguna deram **429** (congestionados); Inkling Small deu 403.
+- `openrouter/openrouter/auto` dá **402** (sem créditos): ele escolhe modelos pagos.
+- Vários modelos grátis "pensam" antes de responder: `max_tokens` baixo (ex.: 20) acaba no raciocínio e o conteúdo vem vazio. Use pelo menos ~500.
+- O 9router responde em **streaming (SSE)** por padrão.
 ## Agentes × provedores (estratégia, 15/10/2026)
 
 Agentes são os **programas que trabalham**; provedores são os **modelos que pensam**; o 9router escolhe o provedor.

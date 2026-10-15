@@ -33,7 +33,9 @@ Cada sessão termina com: diário atualizado, commit + push. O "DIA XX/100" da s
 - [x] Travas nos padrões seguros: requireLogin e requireApiKey ligados, nenhum túnel ativo — ok 15/10
 - [x] Chave de API do Alethe salva; testado: sem chave = 401, chave falsa = 401, chave real = aceita — ok 15/10
 - [ ] Ligar Claude Code e Codex passando pelo 9router; ver o uso na topbar
-- [ ] Conectar OpenRouter no 9router (chave oficial) e testar via OpenCode
+- [x] OpenRouter conectado no 9router (chave oficial) e testado ponta a ponta: Nemotron Super 120B grátis respondeu em 2,4 s — ok 15/10
+- [ ] Testar o OpenRouter via OpenCode dentro do Alethe
+- [ ] ⚠️ Decidir sobre as conexões por assinatura (OAuth) no 9router: claude, codex, antigravity, github
 - [x] Antigravity CLI (`agy`) instalado em `%LOCALAPPDATA%\agy\bin` — ok 15/10
 - [ ] Cadastrar `agy` como agente personalizado no Alethe
 - [ ] Freebuff (conta paga): cadastrar como agente personalizado no Alethe
