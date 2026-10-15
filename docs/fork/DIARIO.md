@@ -9,15 +9,20 @@ As mais recentes ficam no topo.
 
 **Feito**
 - Recurso "Orquestração de agentes" ligado e 6 papéis gravados no perfil do Alethe, com o app fechado
-  e backup em `O:dataackupaletheprojects-2026-10-15T13-11-41-994Z.json`.
+  e backup em `O:\data\backup\alethe\projects-2026-10-15T13-11-41-994Z.json`.
 - Time para qualquer planner: `scout` (Codex, só leitura), `builder` (Codex, plano B `builder-claude`),
   `builder-claude` (Claude Sonnet), `expert` (Claude Opus, plano B `builder-claude`).
 - Time para planner Codex: `builder` e `expert` 100% Codex. Roteamento: Equilibrado.
 - Conferido rodando o próprio normalizador do app sobre o arquivo: os 6 papéis sobrevivem ao carregamento.
+- Planos B corrigidos (backup `projects-2026-10-15T13-18-16-435Z.json`): `builder-claude` → `builder`;
+  `expert` → novo `expert-codex` (Codex gpt-5.6-sol); `builder` e `expert` do time Codex → `builder-claude`.
+  O validador do app manteve os 7 papéis e todos os planos B.
 
 **Aprendizados**
 - O Alethe só aceita "somente leitura" em papéis do Codex; por isso o scout é Codex nos dois times.
 - Editar `projects.json` com o app aberto não adianta: ele sobrescreve no próximo salvamento.
+- O plano B só dispara com o provedor do papel acima de 80% da cota e o do reserva abaixo, um nível só.
+  Plano B no mesmo provedor nunca dispara: o `expert` (Opus) caindo para `builder-claude` (Sonnet) era inútil.
 
 **Próximo passo**
 - Abrir o Alethe, criar o projeto `biblioteca-arxiv` e rodar a Fase 1 (`docs/TAREFA-FASE1.md`) no terminal de Orquestração.
