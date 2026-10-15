@@ -18,7 +18,8 @@ Números *autodeclarados* vêm do próprio projeto citado e ainda precisam de me
 | Conexões testadas: 7 ativas, todas funcionando; 5 com falha removidas | ✅ |
 | Gemini AI Studio e Groq (chaves) | ✅ |
 | Combos desenhados | ✅ |
-| Combos criados no painel e testados com falha real | ⏳ |
+| Combos criados e fallback testado com falha real | ✅ (16/10) |
+| OpenCode usando os combos | ✅ provedor `9router` no `opencode.jsonc` |
 | Ollama no fim dos combos | ⏳ (por último) |
 | `agy` e `freebuff` cadastrados como agentes no Alethe | ⏳ |
 | Medições: tokens (Caveman) e RAM/CPU | ⏳ |

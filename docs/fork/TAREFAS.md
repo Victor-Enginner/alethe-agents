@@ -53,8 +53,8 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 - [x] Desenho dos combos `alethe-topo`, `alethe-builder`, `alethe-rapido` ([PROVEDORES.md](./PROVEDORES.md)) — ok 15/10
 
 ### Sprint 1.4 — Combos ativos 🔄
-- [ ] Criar os 3 combos no painel do 9router (Victor, exige login no painel)
-- [ ] Testar cada combo com um pedido real e derrubar o 1º modelo para ver o fallback
+- [x] 3 combos criados (`alethe-topo`, `alethe-builder`, `alethe-rapido`) via `A JORNADA/tools/criar-combos-9router.js` — ok 16/10
+- [x] Combos respondem (0,6 / 1,3 / 1,7 s) e fallback testado: 2 modelos quebrados pulados, Groq respondeu em 1,9 s — ok 16/10
 - [x] Conexões com falha removidas (api.airforce, Poolside, Gemini CLI, Cline, Grok CLI), com backup — ok 15/10
 - [ ] Mais provedores grátis (Victor conectando): testar um a um com `A JORNADA\tools\testar-modelos-9router.ps1 -Models <prefixo/modelo>`
 - [x] Gemini AI Studio (`gemini/gemini-3.7-flash`) e Groq (`groq/openai/gpt-oss-120b`) testados e nos combos — ok 15/10
@@ -63,8 +63,9 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 ### Sprint 1.5 — Agentes no Alethe
 - [x] Antigravity CLI (`agy`) instalado — ok 15/10
 - [x] `agy` cadastrado como agente personalizado — ok 15/10
-- [ ] Cadastrar `freebuff` (conta paga) como agente personalizado
-- [ ] OpenCode com o 9router ligado: usar o combo `alethe-rapido` dentro do Alethe
+- [x] `freebuff` cadastrado como agente personalizado — ok 16/10
+- [x] OpenCode via 9router: provedor `9router` em `~/.config/opencode/opencode.jsonc` (chave via `OPENAI_API_KEY`, sem segredo no arquivo), porta do serviço movida para 41020 — ok 16/10
+- [ ] Abrir o OpenCode **dentro do Alethe** com o 9router ligado e escolher `9router/alethe-rapido`
 - [ ] Confirmar que Claude Code e Codex abertos **sem** 9router seguem na assinatura direta
 
 ### Sprint 1.6 — Economia de tokens
@@ -73,7 +74,7 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 - [ ] Caveman nos agentes trabalhadores (`CAVEMAN_DEFAULT_MODE=caveman`)
 - [ ] Caveman "read less": entender a convivência com o 9router antes de ligar
 - [ ] 🧪 ECC em perfil `minimal` (planner, code-reviewer, security-reviewer, `/context-budget`): ler hooks, instalar seletivo, medir contra o Caveman
-- [ ] 🧪 9router × OmniRoute (compressão real, mesma tarefa)
+- [ ] 🧪 9router × OmniRoute (compressão real, mesma tarefa) · o Victor aposta que o OmniRoute ajuda mais: testar com o mesmo pedido e medir tokens
 - [ ] Decidir o gateway oficial e o destino do LiteLLM (:41000), registrar como D-006
 - [ ] Medir RAM/CPU: app parado, 3 agentes, 10 agentes
 
@@ -123,6 +124,11 @@ Desenho completo em [ARQUITETURA.md §10](./ARQUITETURA.md#10-hermes-e-openclaw-
 
 - [x] Plano escrito: `PROJETOS/biblioteca-arxiv/docs/PLANO.md` — ok 15/10
 - [ ] Fases 1 a 3: metadados (OAI-PMH) → PDFs selecionados + leitor → servidor MCP para os agentes
+
+## Projeto paralelo — Fábrica de frontends
+
+- [x] Visão registrada: `PROJETOS/fabrica-frontend/docs/VISAO.md` — ok 16/10
+- [ ] MCP do 21st.dev (Victor) · skill make-interfaces-feel-better · projeto-base · 1º template: landing do Franca Atende
 
 ## Bloco 3 — Automações reais
 
