@@ -3080,6 +3080,8 @@ export const zhCN: Record<MessageKey, string> = {
   'router9.stoppedStart': '9路由器已停止——启动它',
   'router9.pillOn': '开',
   'router9.pillOff': '关',
+  'gateways.open9router': '打开 9router 控制台',
+  'gateways.openOmniRoute': '打开 OmniRoute 控制台',
   'router9.pillStart': '启动9路由器',
   'router9.pillStop': '停止 9 路由器',
   'router9.onboardingTitle': '绕过速率限制',

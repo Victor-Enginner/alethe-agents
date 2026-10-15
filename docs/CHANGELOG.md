@@ -12,6 +12,7 @@ Notable user-facing changes to **Alethe** are documented here. The format is bas
 
 ### Added
 
+- **Open the 9router and OmniRoute dashboards from the top bar.** Two buttons next to the 9router pill open each local gateway dashboard in the browser.
 - **Turning on AI Memory now takes you to a working install, and recall actually works.** The switch
   in Preferences → Features grew a panel beneath it: whether ai-memory is there, a button to install
   it — the download checked against the hash the project publishes — and whether it is running, with

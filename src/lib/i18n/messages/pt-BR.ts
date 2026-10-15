@@ -3465,6 +3465,8 @@ export const ptBR: Record<MessageKey, string> = {
   'router9.stoppedStart': 'O 9router está parado — iniciar',
   'router9.pillOn': 'on',
   'router9.pillOff': 'off',
+  'gateways.open9router': 'Abrir o painel do 9router',
+  'gateways.openOmniRoute': 'Abrir o painel do OmniRoute',
   'router9.pillStart': 'Iniciar o 9router',
   'router9.pillStop': 'Parar o 9router',
   'router9.onboardingTitle': 'Fuja dos limites de uso',

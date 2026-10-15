@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Coffee,
+  ExternalLink,
   Maximize2,
   Menu,
   Minus,
@@ -33,7 +34,14 @@ import { useT } from '../../lib/i18n'
 import { useSidebarViews } from '../../lib/viewPlacement'
 import { observeClaudeReset, observeCodexReset } from '../../lib/limitResetWatch'
 import { formatShortcut } from '../../lib/platform'
-import { codexHeadlineWindow, hasCodexWindow, killPty, remoteControlInfo } from '../../lib/tauri'
+import { omniRouteDashboardUrl, router9DashboardUrl } from '../../lib/gateways'
+import {
+  codexHeadlineWindow,
+  hasCodexWindow,
+  killPty,
+  openInBrowser,
+  remoteControlInfo,
+} from '../../lib/tauri'
 import { usePomodoroStore } from '../../stores/pomodoroStore'
 import { useProjectsStore } from '../../stores/projectsStore'
 import { useUiStore } from '../../stores/uiStore'
@@ -93,6 +101,35 @@ function MemoryPillButton({ ramMb }: { ramMb: number }) {
     >
       {ramMb.toFixed(0)} MB
     </button>
+  )
+}
+
+/** Opens the local gateway dashboards (9router, OmniRoute) in the system browser. */
+function GatewayDashboardButtons() {
+  const t = useT()
+  const { config } = useRouter9Runtime()
+  const open = (url: string) => void openInBrowser(url).catch(() => undefined)
+  return (
+    <>
+      <button
+        type="button"
+        className={styles.ramPill}
+        title={t('gateways.open9router')}
+        aria-label={t('gateways.open9router')}
+        onClick={() => open(router9DashboardUrl(config.port))}
+      >
+        9router <ExternalLink size={11} aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className={styles.ramPill}
+        title={t('gateways.openOmniRoute')}
+        aria-label={t('gateways.openOmniRoute')}
+        onClick={() => open(omniRouteDashboardUrl())}
+      >
+        OmniRoute <ExternalLink size={11} aria-hidden="true" />
+      </button>
+    </>
   )
 }
 
@@ -890,6 +927,7 @@ export function TitleBar() {
               <MemoryPillButton ramMb={ramMb} />
             ) : null}
             {preferences.topbarShowRouter9 ? <Router9PillButton /> : null}
+            {preferences.topbarShowRouter9 ? <GatewayDashboardButtons /> : null}
             <button
               type="button"
               className={styles.editWidgets}

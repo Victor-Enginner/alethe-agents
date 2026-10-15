@@ -3430,6 +3430,8 @@ export const en = {
   'router9.stoppedStart': '9router is stopped — start it',
   'router9.pillOn': 'on',
   'router9.pillOff': 'off',
+  'gateways.open9router': 'Open the 9router dashboard',
+  'gateways.openOmniRoute': 'Open the OmniRoute dashboard',
   'router9.pillStart': 'Start 9router',
   'router9.pillStop': 'Stop 9router',
   'router9.onboardingTitle': 'Route around rate limits',

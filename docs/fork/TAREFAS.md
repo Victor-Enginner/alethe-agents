@@ -76,6 +76,8 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 - [ ] 🧪 ECC em perfil `minimal` (planner, code-reviewer, security-reviewer, `/context-budget`): ler hooks, instalar seletivo, medir contra o Caveman
 - [x] OmniRoute 3.8.51 instalado e seguro (41030, loopback, chave obrigatória) — ok 16/10
 - [ ] OmniRoute: senha + chave + provedores (Victor, no painel)
+- [x] Botões na topbar para abrir os painéis do 9router e OmniRoute — ok 16/10
+- [ ] Bug: pílula mostra "9router off" com ele rodando (em `--tray` o processo-pai encerra; `router9_status` olha só o filho). Corrigir no Rust: considerar a porta respondendo
 - [ ] 🧪 9router × OmniRoute: mesmo pedido, medir tokens e tempo
 - [x] Túnel público do 9router desligado (`tunnelEnabled` e `tailscaleEnabled` = false; apontava para a porta antiga 20128) — ok 16/10
 - [x] Regras do Node no firewall (perfil Público) desabilitadas pelo Victor — ok 16/10
