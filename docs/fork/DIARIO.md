@@ -19,8 +19,11 @@ As mais recentes ficam no topo.
   `alethe_*`, e um roteador escolhe o papel (scout, builder, expert...) por tipo, esforço e cota.
 - O `AGENTS.md` do autor tem regras da casa que o fork ainda não segue (seção 9 do guia).
 
+- Pesquisa de provedores e orquestradores ([PROVEDORES.md](./PROVEDORES.md)): 9router (já embutido no app), OmniRoute, AirLLM, Freebuff, Hermes, OpenClaw e o estudo de caso Toolzz Voice.
+- Plano de 100 dias em [TAREFAS.md](./TAREFAS.md), dívidas em [DIVIDAS.md](./DIVIDAS.md) e diagrama de conexões em draw.io + Excalidraw.
+
 **Próximo passo**
-- Trilha de estudo, etapa 1: criar um comando Rust simples e chamá-lo da interface.
+- Dia 3: conectar o 9router pelo próprio Alethe e passar Claude Code e Codex por ele.
 
 ---
 

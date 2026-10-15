@@ -5,6 +5,10 @@ Tudo o que é deste fork fica aqui. O resto de `docs/` é do projeto original.
 | Arquivo | Para que serve | Quando atualizar |
 |---|---|---|
 | [ARQUITETURA.md](./ARQUITETURA.md) | Como o app funciona por dentro, com trilha de estudo | Ao descobrir algo novo no código |
+| [TAREFAS.md](./TAREFAS.md) | **Lista de tarefas da série 100 dias** (marcar ok) | Todo dia |
+| [PROVEDORES.md](./PROVEDORES.md) | Gateways, provedores e orquestradores: o que é cada um e quando entra | Ao testar ou decidir uma ferramenta |
+| [DIVIDAS.md](./DIVIDAS.md) | Dívidas técnicas abertas | Ao criar ou pagar uma dívida |
+| [diagramas/](./diagramas/) | draw.io e Excalidraw (gerados por `gerar.mjs`) | Quando a arquitetura mudar |
 | [ROADMAP.md](./ROADMAP.md) | Para onde o projeto vai: fases, metas e ideias | Ao planejar ou concluir uma etapa |
 | [DIARIO.md](./DIARIO.md) | Registro de cada dia de trabalho | Ao final de cada sessão |
 | [DECISOES.md](./DECISOES.md) | Decisões importantes e o porquê de cada uma | Ao escolher entre caminhos |
