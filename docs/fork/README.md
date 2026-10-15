@@ -4,6 +4,7 @@ Tudo o que é deste fork fica aqui. O resto de `docs/` é do projeto original.
 
 | Arquivo | Para que serve | Quando atualizar |
 |---|---|---|
+| [PROMPT-CONTEXTO.md](./PROMPT-CONTEXTO.md) | **Prompt para colar num agente novo** (Claude/Codex no Alethe) com todo o contexto | Quando o estado mudar |
 | [RETOMAR.md](./RETOMAR.md) | **Como religar tudo e por onde continuar** | A cada pausa longa |
 | [ARQUITETURA.md](./ARQUITETURA.md) | Como o app funciona por dentro, com trilha de estudo | Ao descobrir algo novo no código |
 | [TAREFAS.md](./TAREFAS.md) | **Lista de tarefas da série 100 dias** (marcar ok) | Todo dia |
