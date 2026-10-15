@@ -52,15 +52,12 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 - [x] Teste real das 9 conexões: 5 funcionam (cc, cx, ag, gh, openrouter) — ok 15/10
 - [x] Desenho dos combos `alethe-topo`, `alethe-builder`, `alethe-rapido` ([PROVEDORES.md](./PROVEDORES.md)) — ok 15/10
 
-### Sprint 1.4 — Combos ativos e conexões com falha 🔄
+### Sprint 1.4 — Combos ativos 🔄
 - [ ] Criar os 3 combos no painel do 9router (Victor, exige login no painel)
 - [ ] Testar cada combo com um pedido real e derrubar o 1º modelo para ver o fallback
-- [ ] Gemini CLI (`gc/`): resolver o 403 em todos os modelos
-- [ ] Cline (`cl/`): 401/402, reautenticar ou remover
-- [ ] api.airforce (`af/`): 402, achar modelos grátis ou remover
-- [ ] Poolside (`ps/`): 404, achar os ids corretos dos modelos
+- [x] Conexões com falha removidas (api.airforce, Poolside, Gemini CLI, Cline, Grok CLI), com backup — ok 15/10
 - [ ] Mais provedores grátis (Victor conectando): testar um a um com `A JORNADA\tools\testar-modelos-9router.ps1 -Models <prefixo/modelo>`
-- [ ] Gemini (AI Studio, chave) e Groq (chave) como fallback
+- [x] Gemini AI Studio (`gemini/gemini-3.7-flash`) e Groq (`groq/openai/gpt-oss-120b`) testados e nos combos — ok 15/10
 - [ ] Ollama local no fim de cada combo (por último)
 
 ### Sprint 1.5 — Agentes no Alethe
@@ -90,11 +87,34 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 
 ## Bloco 2 — Orquestração
 
-- [ ] Regras de roteamento por cota (`QuotaGate`) com os provedores do Bloco 1
-- [ ] Docker: sandbox para agentes autônomos
-- [ ] Hermes Agent dentro da sandbox
-- [ ] OpenClaw dentro da sandbox
-- [ ] Comparar orquestrador do Alethe × OpenClaw × Hermes
+Desenho completo em [ARQUITETURA.md §10](./ARQUITETURA.md#10-hermes-e-openclaw-agentes-autônomos-bloco-2).
+
+### Sprint 2.1 — Docker e ponte segura
+- [x] Docker Desktop instalado (29.8.2, WSL2, Ubuntu 24.04) — já existia, conferido 15/10
+- [ ] Ligar o Docker Desktop e rodar um container de teste
+- [ ] 🧪 Ponte opção 0: container alcança `host.docker.internal:41010`?
+- [ ] Se não: ponte opção 1 (proxy na interface do Docker + regra de firewall)
+- [ ] Critério de aceite: container fala com o 9router **e** `192.168.x.x:41010` continua recusado
+- [ ] Chaves de API do 9router separadas: `hermes` e `openclaw`
+
+### Sprint 2.2 — Hermes Agent
+- [ ] Ler a documentação oficial e o repositório (NousResearch/hermes-agent) antes de instalar
+- [ ] Container com volume só em `O:\data\agentes\hermes`, sem Docker socket
+- [ ] Apontar para o 9router (combo `alethe-builder` ou `alethe-rapido`)
+- [ ] Canal: Telegram (bot próprio) para conversar pelo celular
+- [ ] Teste: "o que falta na sprint atual?" lendo DIARIO/TAREFAS (montados somente leitura)
+
+### Sprint 2.3 — OpenClaw
+- [ ] Ler a documentação oficial e o repositório antes de instalar
+- [ ] Container isolado, mesmo padrão do Hermes
+- [ ] Gateway apontando para o 9router
+- [ ] Canal WhatsApp/Telegram
+- [ ] Primeira automação: roteiro de um episódio da série 100 dias
+- [ ] Protótipo do canal da Bina (sem dados reais)
+
+### Sprint 2.4 — Orquestração avançada
+- [ ] Regras de roteamento por cota (`QuotaGate`) no orquestrador do Alethe
+- [ ] Comparar orquestrador do Alethe × Hermes × OpenClaw e registrar D-007 (quando usar cada um)
 - [ ] Etapa 1 da trilha de estudo: comando Rust `ola` + botão (entender `invoke`)
 
 ## Bloco 3 — Automações reais
@@ -116,7 +136,8 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 
 | Lacuna | Por que importa | Onde resolver |
 |---|---|---|
-| Gemini CLI dá 403 em tudo | Gemini 3.1 Pro seria um ótimo modelo no combo topo | Sprint 1.4 |
+| Gemini 3.1 Pro indisponível (429 no AI Studio grátis, 403 no Gemini CLI) | Seria um ótimo modelo no combo topo | Rever quando houver cota |
+| Ponte Docker → 9router nunca testada | Sem ela, Hermes e OpenClaw não acessam os modelos | Sprint 2.1 |
 | Combo do 9router nunca testado com falha real | Não sabemos se o fallback troca rápido nem como o agente reage | Sprint 1.4 |
 | Uso real de cota das assinaturas pelo 9router | Orquestração pode esgotar a cota do Claude/Codex que você usa direto | Sprint 1.7 (medir) |
 | Nenhuma medição de tokens ainda | "Economia" sem número é palpite | Sprint 1.6 |

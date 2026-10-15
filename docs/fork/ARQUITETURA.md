@@ -222,3 +222,70 @@ para facilitar receber atualizações do original e, quem sabe, contribuir de vo
 
 As regras de commit (sem co-autor, só com permissão) valem para o repositório do autor. Neste
 fork, quem decide é o Victor.
+
+## 10. Hermes e OpenClaw: agentes autônomos (Bloco 2)
+
+### 10.1 Papel de cada um
+
+O Alethe é a **mesa de trabalho**: você presente, orquestrando código. Hermes e OpenClaw são
+**agentes que trabalham sozinhos, 24h**, acionados por chat (WhatsApp, Telegram, Discord), mesmo com
+você longe do PC.
+
+```text
+                      VOCÊ
+          ┌────────────┴────────────┐
+     no PC (presente)         no celular (longe)
+          │                         │
+     ┌────▼─────┐          ┌────────▼──────────────┐
+     │  ALETHE  │          │  HERMES · OPENCLAW     │  ← sandbox Docker
+     │ orquestra│          │  agentes autônomos 24h │
+     │ o código │          │  WhatsApp · Telegram   │
+     └────┬─────┘          └────────┬──────────────┘
+          └────────────┬────────────┘
+                  ┌────▼────┐
+                  │ 9router │  ← mesmos combos e provedores
+                  └─────────┘
+```
+
+| | Hermes Agent (Nous Research, MIT) | OpenClaw (MIT) |
+|---|---|---|
+| Ponto forte | **Memória persistente e aprendizado**: cria habilidades a partir do que faz | **Gateway central + canais + sub-agentes** |
+| Papel no sistema | Assistente de operações: lembra do projeto, resume o trabalho dos agentes, responde dúvidas sobre DIARIO, TAREFAS e DECISÕES | Central de automações: pipeline da série 100 dias, monitoramentos, tarefas agendadas, protótipo do canal WhatsApp da Bina |
+| Modelos | Qualquer endpoint compatível com OpenAI → **9router** (combos) | Idem → **9router** |
+| Risco | Muitas permissões (shell, arquivos, mensagens) | Idem |
+
+Usos planejados:
+1. **Série 100 dias (OpenClaw):** "gera o roteiro do dia 15" pelo celular → roteiro, narração e thumbnail para aprovar.
+2. **Memória do projeto (Hermes):** "o que falta na sprint 1.4?" respondido de qualquer lugar.
+3. **Protótipo do canal da Bina (OpenClaw):** testar conversa no WhatsApp antes da stack própria do
+   Franca Atende. Só protótipo: dados de clientes e prefeitura ficam na stack própria.
+
+### 10.2 Isolamento (não negociável)
+
+- Rodam **só em containers Docker**, nunca direto no Windows.
+- Volume montado **apenas** com a pasta de trabalho de cada um (ex.: `O:\data\agentes\hermes`), nunca `C:\` ou `O:\` inteiros.
+- Sem acesso ao Docker socket do host.
+- Segredos (tokens de bot, chave do 9router) via arquivo `.env` fora do Git.
+- Uma chave de API do 9router **só para eles** (`hermes`, `openclaw`), revogável sem afetar o Alethe.
+
+### 10.3 Lacuna: ponte Docker → 9router
+
+O 9router escuta só em `127.0.0.1:41010` (correção de segurança do fork). Dentro de um container,
+`127.0.0.1` é o próprio container, não o PC. Opções, da mais simples para a mais trabalhosa:
+
+| # | Opção | Como | Expõe na rede de casa? | Status |
+|---|---|---|---|---|
+| 0 | `host.docker.internal` | O Docker Desktop encaminha `host.docker.internal:41010` para o host. Verificar se alcança serviço preso ao loopback | Não | 🧪 **testar primeiro** |
+| 1 | Ponte restrita à interface do Docker | Proxy TCP pequeno escutando só no IP da interface virtual do Docker/WSL + regra do Firewall do Windows aceitando só a sub-rede do Docker | Não (se o firewall estiver certo) | plano B |
+| 2 | 9router dentro do Docker | Rede Docker privada com 9router + agentes; o Alethe aponta para a porta publicada em `127.0.0.1` | Não | plano C (perde a gestão pelo Alethe) |
+
+Critério de aceite: o container fala com o 9router **e** o IP da rede da casa (`192.168.x.x:41010`)
+continua recusado (mesmo teste da verificação de segurança).
+
+### 10.4 Ordem de entrada
+
+1. Docker Desktop ligado e testado (já instalado, com WSL2 e Ubuntu 24.04)
+2. Ponte Docker → 9router (opção 0, depois 1 se precisar)
+3. **Hermes** (um agente só, mais simples)
+4. **OpenClaw** (gateway, canais, sub-agentes)
+5. Comparar e definir quando usar o orquestrador do Alethe, o Hermes ou o OpenClaw (decisão D-007)

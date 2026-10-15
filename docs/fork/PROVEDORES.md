@@ -15,11 +15,10 @@ Números *autodeclarados* vêm do próprio projeto citado e ainda precisam de me
 | Item | Estado |
 |---|---|
 | 9router instalado, seguro e verificado | ✅ |
-| 9 conexões testadas (5 funcionando) | ✅ |
+| Conexões testadas: 7 ativas, todas funcionando; 5 com falha removidas | ✅ |
+| Gemini AI Studio e Groq (chaves) | ✅ |
 | Combos desenhados | ✅ |
 | Combos criados no painel e testados com falha real | ⏳ |
-| 4 conexões com erro resolvidas (Gemini CLI, Cline, api.airforce, Poolside) | ⏳ |
-| Gemini AI Studio e Groq (chaves) | ⏳ |
 | Ollama no fim dos combos | ⏳ (por último) |
 | `agy` e `freebuff` cadastrados como agentes no Alethe | ⏳ |
 | Medições: tokens (Caveman) e RAM/CPU | ⏳ |
@@ -49,10 +48,13 @@ As tarefas correspondentes estão em [TAREFAS.md](./TAREFAS.md) (sprints 1.4 a 1
  OpenCode ────────────────┼──► 9router  127.0.0.1:41010 ──────────────┼─► cx/  Codex (conta OpenAI)
  (Claude Code/Codex,      │    · só aceita conexão do próprio PC      ├─► ag/  Antigravity
   se ligados no 9router) ─┘    · senha própria + chave obrigatória    ├─► gh/  GitHub Copilot
-                               · combos de fallback                   ├─► openrouter/  modelos grátis
+                               · combos de fallback                   ├─► gemini/  AI Studio (chave)
+                                                                      ├─► groq/  Groq (chave)
+                                                                      ├─► openrouter/  modelos grátis
                                                                       └─► Ollama local (por último)
 
  Claude Code · Codex · agy · Freebuff ──► direto na conta de cada um (padrão, sem 9router)
+ Hermes · OpenClaw (Bloco 2, em Docker) ──► 9router por uma ponte segura (ver ARQUITETURA.md §10)
 ```
 
 Diagramas editáveis: [`diagramas/conexoes-provedores.drawio`](./diagramas/) e `.excalidraw` (gerados por `gerar.mjs`; atualizar para este desenho).
@@ -89,7 +91,7 @@ consegue fazer pedidos para `127.0.0.1`. As camadas se somam.
 
 ### 4.3 Assinaturas por OAuth (decisão D-005)
 
-Claude, Codex, Antigravity, GitHub Copilot, Gemini CLI e Cline estão conectados por **login de conta**.
+Claude, Codex, Antigravity e GitHub Copilot estão conectados por **login de conta**.
 Decisão do Victor: **manter e somar** ([DECISOES.md](./DECISOES.md#d-005)). Riscos aceitos: os termos desses
 serviços restringem uso por proxy (possível suspensão) e os tokens de login ficam no banco do 9router.
 Cuidados: não expor `9router-data` em backups públicos; acompanhar avisos nos painéis das contas;
@@ -97,7 +99,7 @@ lembrar que o que passa pelo 9router gasta **a mesma cota** da assinatura usada 
 
 ## 5. Conexões testadas
 
-9 conexões, 86 modelos no catálogo. Um pedido mínimo por modelo, via `127.0.0.1:41010`.
+**7 conexões ativas, 77 modelos** (depois de remover as que falharam). Um pedido mínimo por modelo, via `127.0.0.1:41010`.
 
 | Prefixo | Conexão | Tipo | ✅ Funcionou | ❌ Falhou (motivo) |
 |---|---|---|---|---|
@@ -106,12 +108,21 @@ lembrar que o que passa pelo 9router gasta **a mesma cota** da assinatura usada 
 | `ag/` | Antigravity | OAuth | `gemini-3-flash` (1,1 s) | `gemini-3.7-flash-high`, `gemini-pro-agent`: 404 · `claude-sonnet-4-6`: descontinuado |
 | `gh/` | GitHub Copilot | OAuth | `gpt-4.1` (0,6 s) | `gpt-5-mini`, `claude-haiku-4.5`, `gpt-5.4-mini-free-auto`: fora do plano |
 | `openrouter/` | OpenRouter | chave | `nvidia/nemotron-3-super-120b-a12b:free` (1,1 s), `nvidia/nemotron-3.5-lightning:free`, `cohere/north-mini-code:free` | Gemma 4 e Laguna `:free`: 429 (congestionados) · `openrouter/auto`: 402 (sem crédito) |
-| `gc/` | Gemini CLI | OAuth | — | **403 em todos** ("reset after ~2m"): conta sem permissão/cota. **A investigar** |
-| `cl/` | Cline | OAuth | — | 401 (não autorizado) / 402 (sem crédito) |
-| `af/` | api.airforce | chave | — | 402: modelos exigem plano pago |
-| `ps/` | Poolside | chave | — | 404: id de modelo não reconhecido |
+| `gemini/` | Gemini (AI Studio) | chave | `gemini-3.7-flash` (2,1 s), `gemini-3.5-flash-lite` (4,8 s) | `gemini-3.1-pro-preview`: 429 (cota grátis do Pro esgotada/indisponível) |
+| `groq/` | Groq | chave | `openai/gpt-oss-120b` (1,0 s) | `llama-3.3-70b-versatile`, `qwen/qwen3-32b`: 404 (descontinuados no Groq) |
 
-O Gemini CLI segue ativo (https://geminicli.com): uma informação anterior de que teria sido desligado estava errada.
+**Regra:** conexão que falha no teste real é **removida**, com backup do banco antes
+(`A JORNADA\tools\remover-conexoes-9router.js`; backups em `O:\data\backup\9router\`). Um 429 passageiro não conta.
+
+**Removidas em 15/10/2026:**
+
+| Conexão | Motivo |
+|---|---|
+| api.airforce (`af/`) | 402: modelos exigem plano pago |
+| Poolside (`ps/`) | 404: ids de modelo não reconhecidos |
+| Gemini CLI (`gc/`) | 403 em todos os modelos, persistente. O Gemini CLI segue ativo (https://geminicli.com); o problema era a conexão desta conta pelo 9router. O Gemini entra pelo AI Studio (`gemini/`) |
+| Cline (`cl/`) | 401 / 402: sem autorização e sem créditos |
+| Grok CLI (`gcli/`) | 426: o 9router 0.5.59 usa uma versão desatualizada do cliente do Grok |
 
 ### Notas sobre o OpenRouter
 - Nome no 9router: **`openrouter/<id do OpenRouter>`**.
@@ -126,12 +137,12 @@ Criar no painel do 9router (**Combos**) com estes nomes e esta ordem.
 
 | Combo | Papel no orquestrador | Ordem |
 |---|---|---|
-| **`alethe-topo`** | planejador, `expert`, `deep` | `cc/claude-opus-5` → `cx/gpt-5.6-sol` → `cc/claude-sonnet-5` → `cx/gpt-5.6-terra` → `ag/gemini-3-flash` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` → *(Ollama)* |
-| **`alethe-builder`** | `builder`, `writer` | `cc/claude-sonnet-5` → `cx/gpt-5.6-terra` → `gh/gpt-4.1` → `ag/gemini-3-flash` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` → *(Ollama)* |
-| **`alethe-rapido`** | `scout`, `typist` | `ag/gemini-3-flash` → `gh/gpt-4.1` → `openrouter/nvidia/nemotron-3.5-lightning:free` → `openrouter/cohere/north-mini-code:free` → *(Ollama)* |
+| **`alethe-topo`** | planejador, `expert`, `deep` | `cc/claude-opus-5` → `cx/gpt-5.6-sol` → `cc/claude-sonnet-5` → `cx/gpt-5.6-terra` → `gemini/gemini-3.7-flash` → `ag/gemini-3-flash` → `groq/openai/gpt-oss-120b` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` → *(Ollama)* |
+| **`alethe-builder`** | `builder`, `writer` | `cc/claude-sonnet-5` → `cx/gpt-5.6-terra` → `gemini/gemini-3.7-flash` → `gh/gpt-4.1` → `ag/gemini-3-flash` → `groq/openai/gpt-oss-120b` → `openrouter/nvidia/nemotron-3-super-120b-a12b:free` → *(Ollama)* |
+| **`alethe-rapido`** | `scout`, `typist` | `groq/openai/gpt-oss-120b` → `gemini/gemini-3.5-flash-lite` → `ag/gemini-3-flash` → `gh/gpt-4.1` → `openrouter/nvidia/nemotron-3.5-lightning:free` → `openrouter/cohere/north-mini-code:free` → *(Ollama)* |
 
 A ordem entre Claude e GPT-5.6 é hipótese inicial: validar na primeira orquestração real (qualidade, tempo, cota).
-Quando o Gemini CLI, Gemini AI Studio ou Groq passarem no teste, entram nos combos antes dos `:free`.
+O Groq abre o `alethe-rapido` por ser o mais rápido (1,0 s) com um modelo de 120B.
 
 **Dados de clientes ou prefeitura** não vão para modelos grátis (podem virar treino): só provedor com
 contrato/termos de privacidade adequados ou Ollama local.
@@ -145,7 +156,7 @@ contrato/termos de privacidade adequados ou Ollama local.
 | OpenCode | ✅ | **Via 9router** (`alethe-rapido`) | Tarefas simples e em volume |
 | Antigravity CLI (`agy`) | ✅ `%LOCALAPPDATA%\agy\bin` | Direto na conta Google · ⏳ cadastrar como agente personalizado | Gemini (padrão Gemini 3.5 Flash) |
 | Freebuff | ✅ | Direto, **conta paga** (backend Codebuff) · ⏳ cadastrar como agente personalizado | Código rápido |
-| Gemini CLI | via 9router (`gc/`) | ⏳ resolver 403 | Gemini Pro |
+| Gemini | via 9router (`gemini/`, AI Studio) | ✅ | Gemini 3.7 Flash |
 
 Como o Alethe liga um agente ao 9router (`src/lib/router9.ts`): Claude Code recebe `ANTHROPIC_BASE_URL`;
 Codex e OpenCode recebem `OPENAI_BASE_URL`. Só acontece quando o 9router está ligado para aquele
