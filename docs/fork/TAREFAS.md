@@ -77,7 +77,7 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 - [x] OmniRoute 3.8.51 instalado e seguro (41030, loopback, chave obrigatória) — ok 16/10
 - [ ] OmniRoute: senha + chave + provedores (Victor, no painel)
 - [ ] 🧪 9router × OmniRoute: mesmo pedido, medir tokens e tempo
-- [ ] ⚠️ Desligar o túnel público do 9router (cloudflared ligado ao configurar o 9Remote)
+- [x] Túnel público do 9router desligado (`tunnelEnabled` e `tailscaleEnabled` = false; apontava para a porta antiga 20128) — ok 16/10
 - [x] Regras do Node no firewall (perfil Público) desabilitadas pelo Victor — ok 16/10
 - [ ] Decidir o gateway oficial e o destino do LiteLLM (:41000), registrar como D-006
 - [ ] Medir RAM/CPU: app parado, 3 agentes, 10 agentes
