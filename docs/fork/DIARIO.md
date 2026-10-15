@@ -5,6 +5,25 @@ As mais recentes ficam no topo.
 
 ---
 
+## 16/10/2026 — Orquestração configurada
+
+**Feito**
+- Recurso "Orquestração de agentes" ligado e 6 papéis gravados no perfil do Alethe, com o app fechado
+  e backup em `O:dataackupaletheprojects-2026-10-15T13-11-41-994Z.json`.
+- Time para qualquer planner: `scout` (Codex, só leitura), `builder` (Codex, plano B `builder-claude`),
+  `builder-claude` (Claude Sonnet), `expert` (Claude Opus, plano B `builder-claude`).
+- Time para planner Codex: `builder` e `expert` 100% Codex. Roteamento: Equilibrado.
+- Conferido rodando o próprio normalizador do app sobre o arquivo: os 6 papéis sobrevivem ao carregamento.
+
+**Aprendizados**
+- O Alethe só aceita "somente leitura" em papéis do Codex; por isso o scout é Codex nos dois times.
+- Editar `projects.json` com o app aberto não adianta: ele sobrescreve no próximo salvamento.
+
+**Próximo passo**
+- Abrir o Alethe, criar o projeto `biblioteca-arxiv` e rodar a Fase 1 (`docs/TAREFA-FASE1.md`) no terminal de Orquestração.
+
+---
+
 ## 15/10/2026 (madrugada) — Dia 3: provedores, segurança e plano dos próximos projetos
 
 **Feito**

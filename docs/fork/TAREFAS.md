@@ -89,7 +89,7 @@ Cada sessão termina com: diário atualizado, commit (+ push quando liberado). O
 ### Sprint 1.7 — Primeira orquestração real 🎯
 - [x] 1º projeto de teste: **Biblioteca arXiv offline** (`PROJETOS/biblioteca-arxiv`) — ok 15/10
 - [x] Levantado como o orquestrador funciona: workers só Claude e Codex, direto nas contas (ARQUITETURA §11) — ok 16/10
-- [ ] Configurar os papéis no app: `scout`, `builder`, `builder-claude`, `expert` + preset Equilibrado
+- [x] Papéis gravados no app: `scout`, `builder`, `builder-claude`, `expert` (+ `builder`/`expert` só Codex para planner Codex), preset Equilibrado, via `A JORNADA/tools/configurar-orquestracao-alethe.js`; os 6 passam no `normalizeOrchestrationSettings` — ok 16/10
 - [x] Tarefa da 1ª orquestração escrita: `biblioteca-arxiv/docs/TAREFA-FASE1.md` — ok 16/10
 - [ ] Evolução do fork: `Launcher` OpenCode no orquestrador para usar os combos do 9router como workers
 - [ ] Rodar: planejador delega para scout/builder, revisar o resultado e o diff
