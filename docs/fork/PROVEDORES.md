@@ -84,6 +84,7 @@ consegue fazer pedidos para `127.0.0.1`. As camadas se somam.
 | Teste | Resultado |
 |---|---|
 | Porta | escuta só em `127.0.0.1:41010`; pelo IP da rede é recusado |
+| Tailscale (16/10, após reinício) | `100.117.35.70:41010` recusado; nenhum serve/funnel ativo |
 | `POST /v1/chat/completions` sem chave / chave falsa | 401 / 401 |
 | Com a chave do Alethe | aceita |
 | `GET /v1/models` | público por design: lista o catálogo, sem gastar tokens |
