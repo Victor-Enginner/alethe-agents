@@ -34,9 +34,12 @@ Cada sessão termina com: diário atualizado, commit + push. O "DIA XX/100" da s
 - [x] Chave de API do Alethe salva; testado: sem chave = 401, chave falsa = 401, chave real = aceita — ok 15/10
 - [ ] Ligar Claude Code e Codex passando pelo 9router; ver o uso na topbar
 - [ ] Conectar OpenRouter no 9router (chave oficial) e testar via OpenCode
-- [ ] Antigravity CLI (`agy`): instalar e cadastrar como agente personalizado no Alethe
+- [x] Antigravity CLI (`agy`) instalado em `%LOCALAPPDATA%\agy\bin` — ok 15/10
+- [ ] Cadastrar `agy` como agente personalizado no Alethe
 - [ ] Freebuff (conta paga): cadastrar como agente personalizado no Alethe
-- [ ] 🧪 Caveman: medir say less + read less (antes/depois) no Claude Code e no OpenCode
+- [x] Caveman 4.0.1 instalado como plugin do Claude Code (só say less), **desligado por padrão** (`%APPDATA%\caveman\config.json`), telemetria off (`DO_NOT_TRACK=1`) — ok 15/10
+- [ ] 🧪 Caveman: medir economia (antes/depois) com o mesmo roteiro
+- [ ] Caveman "read less" (proxy): só depois de entender a convivência com o 9router (ele mexe no ANTHROPIC_BASE_URL)
 - [ ] Gemini (AI Studio) e Groq como fallback no combo
 - [ ] Ollama local no fim do combo (por último: usa a máquina)
 - [ ] Medir RAM/CPU: app parado, 3 agentes, 10 agentes (tabela no PROVEDORES.md)

@@ -95,6 +95,8 @@ Repositório: [JuliusBrussee/caveman](https://github.com/juliusbrussee/caveman) 
 
 Cuidados: telemetria ligada por padrão (`caveman telemetry off` ou `DO_NOT_TRACK=1`); as regras custam ~1.160 tokens de entrada (não compensa quem paga por requisição); números são do próprio projeto, e vamos medir com o mesmo roteiro antes/depois.
 Agentes suportados: Claude Code, Codex, OpenCode, Gemini CLI e outros.
+
+**Instalação feita (15/10/2026):** plugin `caveman@caveman` v4.0.1 no Claude Code (escopo usuário), com hooks SessionStart/SubagentStart/UserPromptSubmit/SessionEnd. `defaultMode: "off"` em `%APPDATA%\caveman\config.json` (conferido: resolve `off`). Ligar por sessão com `/caveman`, `/ultracave` ou `/megacave`, e desligar com `/caveman off`. Por projeto: `.caveman/config.json` com `{"defaultMode":"caveman"}`. Por terminal: variável `CAVEMAN_DEFAULT_MODE`. O instalador completo (`npx @caveman-ai/cli`) **não foi usado**: ele configura um proxy via `ANTHROPIC_BASE_URL`, o que conflita com o 9router.
 ## Desenho alvo
 
 Ver `diagramas/conexoes-provedores.drawio` (abrir no draw.io) e `diagramas/conexoes-provedores.excalidraw`.
