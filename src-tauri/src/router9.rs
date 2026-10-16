@@ -5,6 +5,7 @@
 //! on its own: the app never installs, updates, or launches 9router without a click.
 
 use std::fs::{self, OpenOptions};
+use std::io::{Read, Write};
 use std::net::{Ipv4Addr, SocketAddr, TcpStream};
 use std::path::{Path, PathBuf};
 use std::process::{Child, Command, Stdio};
@@ -43,7 +44,8 @@ pub struct Router9Status {
     managed: Router9Install,
     /// A 9router the user installed themselves, resolved off PATH.
     external: Router9Install,
-    /// The child this app started is still alive.
+    /// The child this app started is still alive, or a 9router started outside Alethe answers its
+    /// health route on the port.
     running: bool,
     /// Something answers on the port. With `running` false this means another process owns it.
     port_in_use: bool,
@@ -111,6 +113,45 @@ fn port_in_use(port: u16) -> bool {
     TcpStream::connect_timeout(&addr, Duration::from_millis(PORT_PROBE_TIMEOUT_MS)).is_ok()
 }
 
+/// A 9router started outside Alethe (for example at Windows logon) is still the proxy agents route
+/// through. An open port alone could be any process, so this asks its health route and only counts a
+/// `200` carrying `"ok":true`.
+fn answers_router9_health(port: u16) -> bool {
+    let addr = SocketAddr::from((Ipv4Addr::LOCALHOST, port));
+    let timeout = Duration::from_millis(PORT_PROBE_TIMEOUT_MS);
+    let Ok(mut stream) = TcpStream::connect_timeout(&addr, timeout) else {
+        return false;
+    };
+    let _ = stream.set_read_timeout(Some(timeout));
+    let _ = stream.set_write_timeout(Some(timeout));
+    let request =
+        format!("GET /api/health HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nConnection: close\r\n\r\n");
+    if stream.write_all(request.as_bytes()).is_err() {
+        return false;
+    }
+    // Stop as soon as the answer is known: the server may keep the socket open past the body.
+    let mut response = Vec::new();
+    let mut chunk = [0u8; 1024];
+    while response.len() < 8192 {
+        match stream.read(&mut chunk) {
+            Ok(0) | Err(_) => break,
+            Ok(n) => response.extend_from_slice(&chunk[..n]),
+        }
+        if is_router9_health_ok(&String::from_utf8_lossy(&response)) {
+            return true;
+        }
+    }
+    is_router9_health_ok(&String::from_utf8_lossy(&response))
+}
+
+fn is_router9_health_ok(response: &str) -> bool {
+    let status_ok = response
+        .lines()
+        .next()
+        .is_some_and(|line| line.starts_with("HTTP/1.") && line.split(' ').nth(1) == Some("200"));
+    status_ok && response.contains("\"ok\":true")
+}
+
 fn quote(path: &Path) -> String {
     format!("\"{}\"", path.to_string_lossy())
 }
@@ -164,7 +205,8 @@ pub fn router9_status(
         .0
         .lock()
         .map(|mut slot| child_alive(&mut slot))
-        .unwrap_or(false);
+        .unwrap_or(false)
+        || answers_router9_health(port);
 
     Ok(Router9Status {
         managed: Router9Install {

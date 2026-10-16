@@ -344,6 +344,8 @@ Notable user-facing changes to **Alethe** are documented here. The format is bas
 
 ### Fixed
 
+- **The 9router pill shows a running 9router even when Alethe did not start it.** A 9router launched at Windows logon used to read as off; the status now also counts a copy whose health route answers on the port.
+
 - **Reconnecting a planner no longer starts a duplicate shell.** Asking the lead agent to open a dev
   server or watcher it already has running on the board (for example after reopening the app, or
   from a new planner terminal) now reuses that running shell and adopts it under the new planner,
