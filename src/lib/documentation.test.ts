@@ -1,6 +1,7 @@
 import overview from '../../docs/OVERVIEW.md?raw'
 import privacy from '../../docs/PRIVACY.md?raw'
-import readme from '../../README.md?raw'
+// The fork replaced README.md; the upstream README keeps the privacy claims.
+import readme from '../../README.upstream.md?raw'
 import security from '../../SECURITY.md?raw'
 
 const normalize = (value: string) => value.replace(/\s+/g, ' ').trim()

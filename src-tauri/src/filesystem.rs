@@ -430,7 +430,10 @@ fn find_relative_path_inner(cwd: &Path, relative: &str) -> Option<PathBuf> {
     if direct.exists() {
         return Some(direct);
     }
+    find_in_worktrees(cwd, relative).or_else(|| find_bare_name_nearby(cwd, relative))
+}
 
+fn find_in_worktrees(cwd: &Path, relative: &Path) -> Option<PathBuf> {
     let output = crate::git_control::git_command(cwd, &["worktree", "list", "--porcelain"]).ok()?;
     if !output.status.success() {
         return None;
@@ -455,11 +458,90 @@ fn find_relative_path_inner(cwd: &Path, relative: &str) -> Option<PathBuf> {
         .map(|(_, candidate)| candidate)
 }
 
+const NEARBY_SEARCH_DEPTH: usize = 2;
+const NEARBY_SEARCH_MAX_DIRS: usize = 400;
+const NEARBY_SKIPPED_DIRS: &[&str] = &["node_modules", "target", "dist", "build"];
+
+/// Agents often print a bare file name ("NOTES.md") for a file they wrote in a
+/// sibling folder of the terminal's cwd. Looks for it a couple of levels below
+/// the cwd and below its parent, bounded so a huge tree never stalls the menu.
+fn find_bare_name_nearby(cwd: &Path, relative: &Path) -> Option<PathBuf> {
+    let mut components = relative.components();
+    let name = components.next()?.as_os_str().to_owned();
+    if components.next().is_some() {
+        return None;
+    }
+    let mut roots = vec![cwd.to_path_buf()];
+    if let Some(parent) = cwd.parent() {
+        roots.push(parent.to_path_buf());
+    }
+    let mut visited = 0usize;
+    let mut best: Option<(std::time::SystemTime, PathBuf)> = None;
+    for root in roots {
+        let mut queue = std::collections::VecDeque::from([(root, 0usize)]);
+        while let Some((dir, depth)) = queue.pop_front() {
+            visited += 1;
+            if visited > NEARBY_SEARCH_MAX_DIRS {
+                break;
+            }
+            let Ok(entries) = fs::read_dir(&dir) else {
+                continue;
+            };
+            for entry in entries.flatten() {
+                let path = entry.path();
+                let Ok(meta) = entry.metadata() else { continue };
+                if meta.is_dir() {
+                    let dir_name = entry.file_name();
+                    let dir_name = dir_name.to_string_lossy();
+                    if depth < NEARBY_SEARCH_DEPTH
+                        && !dir_name.starts_with('.')
+                        && !NEARBY_SKIPPED_DIRS.contains(&dir_name.as_ref())
+                    {
+                        queue.push_back((path, depth + 1));
+                    }
+                } else if entry.file_name() == name {
+                    if let Ok(modified) = meta.modified() {
+                        if best.as_ref().map_or(true, |(time, _)| modified > *time) {
+                            best = Some((modified, path));
+                        }
+                    }
+                }
+            }
+        }
+    }
+    best.map(|(_, path)| path)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::git_control::checked_output;
     use std::time::{SystemTime, UNIX_EPOCH};
+
+    #[test]
+    fn finds_a_bare_file_name_in_a_sibling_folder() {
+        let suffix = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!("alethe-bare-name-{suffix}"));
+        let cwd = root.join("tools");
+        let prompts = root.join("prompts");
+        fs::create_dir_all(&cwd).unwrap();
+        fs::create_dir_all(&prompts).unwrap();
+        fs::write(prompts.join("PROMPT.md"), "# prompt").unwrap();
+
+        let found =
+            find_relative_path_inner(&cwd, "PROMPT.md").map(|p| fs::canonicalize(p).unwrap());
+        assert_eq!(
+            found,
+            Some(fs::canonicalize(prompts.join("PROMPT.md")).unwrap())
+        );
+        assert_eq!(find_relative_path_inner(&cwd, "MISSING.md"), None);
+        assert_eq!(find_relative_path_inner(&cwd, "nested/PROMPT.md"), None);
+
+        let _ = fs::remove_dir_all(&root);
+    }
 
     #[test]
     fn finds_a_relative_path_in_a_sibling_worktree() {

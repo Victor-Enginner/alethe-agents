@@ -19,9 +19,24 @@ fn existing_path_from_user_input(path: &str) -> Result<PathBuf, String> {
     Ok(target)
 }
 
+/// The path itself when it exists, otherwise its closest existing ancestor:
+/// "Open in folder" on a file that moved or was never written still lands in
+/// the right place instead of failing.
+fn path_or_existing_ancestor(path: &str) -> Result<PathBuf, String> {
+    let trimmed = path.trim();
+    if trimmed.is_empty() {
+        return Err("empty path".to_string());
+    }
+    PathBuf::from(trimmed)
+        .ancestors()
+        .find(|candidate| !candidate.as_os_str().is_empty() && candidate.exists())
+        .map(|found| found.to_path_buf())
+        .ok_or_else(|| format!("path does not exist: {trimmed}"))
+}
+
 #[tauri::command]
 pub fn open_in_file_explorer(path: String) -> Result<(), String> {
-    let target = existing_path_from_user_input(&path)?;
+    let target = path_or_existing_ancestor(&path)?;
 
     #[cfg(target_os = "windows")]
     let result = if target.is_file() {
@@ -934,5 +949,25 @@ mod macos_clipboard {
         } else {
             Ok(ClipboardPayload::Text { text })
         }
+    }
+}
+
+#[cfg(test)]
+mod explorer_tests {
+    use super::*;
+
+    #[test]
+    fn falls_back_to_the_closest_existing_folder() {
+        let dir = std::env::temp_dir();
+        let missing = dir.join("alethe-missing-folder").join("NOTES.md");
+        assert_eq!(
+            path_or_existing_ancestor(missing.to_str().unwrap()).unwrap(),
+            dir
+        );
+        assert_eq!(
+            path_or_existing_ancestor(dir.to_str().unwrap()).unwrap(),
+            dir
+        );
+        assert!(path_or_existing_ancestor("   ").is_err());
     }
 }

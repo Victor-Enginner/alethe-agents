@@ -11,8 +11,11 @@ import { VideoPreview } from '../VideoPreview'
 const MarkdownRenderer = lazy(() =>
   import('../MarkdownPane/MarkdownRenderer').then((m) => ({ default: m.MarkdownRenderer })),
 )
-import { isMarkdownFilePath, isVideoFilePath } from '../XTermView/terminalLinks'
+import { linkViewerMode } from './linkViewerMode'
 import styles from './LinkViewerOverlay.module.css'
+
+type MarkdownState =
+  { status: 'loading' } | { status: 'error' } | { status: 'ready'; content: string }
 
 export function LinkViewerOverlay() {
   const t = useT()
@@ -21,9 +24,9 @@ export function LinkViewerOverlay() {
   const dark = useProjectsStore(
     (s) => s.preferences.uiTheme !== 'light' && s.preferences.uiTheme !== 'min-light',
   )
-  const [markdown, setMarkdown] = useState<string | null>(null)
-  const video = Boolean(url && isVideoFilePath(url))
-  const markdownFile = Boolean(url && isMarkdownFilePath(url))
+  const [markdown, setMarkdown] = useState<MarkdownState>({ status: 'loading' })
+  const mode = url ? linkViewerMode(url) : null
+  const markdownFile = mode === 'markdown'
 
   useOnEscape(
     (e) => {
@@ -35,17 +38,15 @@ export function LinkViewerOverlay() {
   )
 
   useEffect(() => {
-    if (!markdownFile || !url) {
-      setMarkdown(null)
-      return
-    }
+    if (!markdownFile || !url) return
     let cancelled = false
+    setMarkdown({ status: 'loading' })
     void readTextFile(url)
       .then((content) => {
-        if (!cancelled) setMarkdown(content)
+        if (!cancelled) setMarkdown({ status: 'ready', content })
       })
       .catch(() => {
-        if (!cancelled) setMarkdown(null)
+        if (!cancelled) setMarkdown({ status: 'error' })
       })
     return () => {
       cancelled = true
@@ -81,15 +82,26 @@ export function LinkViewerOverlay() {
           </button>
         </div>
         <div className={styles.body}>
-          {video ? (
+          {mode === 'video' ? (
             <VideoPreview path={url} className={styles.video} />
-          ) : markdownFile && markdown !== null ? (
-            <div className={styles.markdown}>
-              <Suspense fallback={<span>{t('ui.markdown.loading')}</span>}>
-                <MarkdownRenderer content={markdown} dark={dark} />
-              </Suspense>
-            </div>
-          ) : (
+          ) : mode === 'markdown' ? (
+            markdown.status === 'ready' ? (
+              <div className={styles.markdown}>
+                <Suspense fallback={<span>{t('ui.markdown.loading')}</span>}>
+                  <MarkdownRenderer content={markdown.content} dark={dark} />
+                </Suspense>
+              </div>
+            ) : (
+              <div
+                className={styles.message}
+                role={markdown.status === 'error' ? 'alert' : undefined}
+              >
+                {markdown.status === 'error'
+                  ? t('ui.markdown.loadError', { path: url })
+                  : t('ui.markdown.loading')}
+              </div>
+            )
+          ) : mode === 'web' ? (
             <iframe
               key={url}
               src={url}
@@ -98,9 +110,13 @@ export function LinkViewerOverlay() {
               sandbox="allow-scripts allow-same-origin allow-forms allow-popups"
               referrerPolicy="no-referrer"
             />
+          ) : (
+            <div className={styles.message} role="alert">
+              {t('ui.markdown.loadError', { path: url })}
+            </div>
           )}
         </div>
-        <div className={styles.hint}>{t('linkViewer.embedHint')}</div>
+        {mode === 'web' ? <div className={styles.hint}>{t('linkViewer.embedHint')}</div> : null}
       </div>
     </div>
   )

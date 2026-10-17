@@ -124,3 +124,16 @@
 :global([data-visual-style='clean']) .headBtn {
   border-radius: var(--clean-control-radius);
 }
+
+.message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 24px 32px;
+  font-size: 13px;
+  color: var(--fg-muted, var(--fg));
+  font-family: var(--font-mono, monospace);
+  overflow-wrap: anywhere;
+  text-align: center;
+}
