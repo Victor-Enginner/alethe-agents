@@ -838,6 +838,15 @@ export const ptBR: Record<MessageKey, string> = {
   'prefs.spawnConcurrencyDecrease': 'Menos spawns em paralelo',
   'prefs.spawnConcurrencyIncrease': 'Mais spawns em paralelo',
   'prefs.spawnConcurrencyReset': 'Voltar ao padrão',
+  'prefs.contextWarning': 'Aviso de contexto',
+  'prefs.contextWarningDesc':
+    'Mostra o contexto atual de cada terminal de agente (tamanho do prompt do último turno). Amarelo e vermelho a partir destes limites; sem som nem pisca.',
+  'prefs.contextWarningEnable': 'Mostrar o selo de contexto nos terminais de agente',
+  'prefs.contextWarningYellow': 'Amarelo a partir de',
+  'prefs.contextWarningRed': 'Vermelho a partir de',
+  'prefs.contextWarningDecrease': 'Diminuir "{label}"',
+  'prefs.contextWarningIncrease': 'Aumentar "{label}"',
+  'prefs.contextWarningReset': 'Voltar "{label}" ao padrão',
   'prefs.gsdSyncModelsTitle': 'Cadeia de fallback de modelos do GSD Sync',
   'prefs.gsdSyncModelsDesc':
     'Modelos reserva pra sessão-filha do GSD Sync, tentados em ordem se o modelo espelhado falhar.',
@@ -2786,6 +2795,18 @@ export const ptBR: Record<MessageKey, string> = {
   'hud.empty': 'Nenhum agente rodando',
   'hud.collapse': 'Recolher',
   'hud.expand': 'Abrir painel de gasto',
+  'context.badge': '{tokens} ctx',
+  'context.badgeTitle': 'Contexto do último turno: {tokens} tokens',
+  'context.highTitle': 'Contexto alto: abra uma sessão nova a partir do {file}',
+  'context.resumeAction': 'Atualizar {file} e abrir sessão nova',
+  'context.resumeUpdating': 'Esperando o agente atualizar o {file}…',
+  'context.resumeUpdatePrompt':
+    'Atualize o {file} nesta pasta para que uma sessão nova continue este trabalho: objetivo, estado atual, decisões tomadas, arquivos mexidos, problemas abertos e próximos passos. Curto e factual. Ao terminar, responda só "{file} atualizado".',
+  'context.resumeBootstrapPrompt':
+    'Leia o {file} nesta pasta e continue o trabalho de onde parou. Antes de agir, confirme em um parágrafo curto o que entendeu.',
+  'context.resumePaneName': '{agent} · retomada',
+  'context.resumeTimeout': 'O arquivo de retomada não mudou; abrindo a sessão nova assim mesmo.',
+  'context.resumeFailed': 'Não foi possível abrir a sessão de retomada',
   'hud.agentsRunning': '{count} agentes',
 
   /* ---- crash watch ---- */

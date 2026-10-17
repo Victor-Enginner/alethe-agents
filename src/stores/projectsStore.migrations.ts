@@ -1,12 +1,13 @@
 import { nanoid } from 'nanoid'
 
+import { normalizeContextWarning } from '../lib/contextWarning'
 import { sanitizeCustomAgents } from '../lib/customAgents'
+import { normalizeExperimentalAgentPermissionMode } from '../lib/experimentalAgentPolicy'
 import {
   legacyGitFeatureFlag,
   legacyTodosFeatureFlag,
   normalizeEnabledFeatures,
 } from '../lib/features'
-import { normalizeExperimentalAgentPermissionMode } from '../lib/experimentalAgentPolicy'
 import { normalizeOrchestrationSettings } from '../lib/orchestrationSettings'
 import { recordLegacyGitFlag, recordLegacyTodosFlag } from '../lib/plugins/legacyMigration'
 import { normalizeProjectGrids, projectGridContainer } from '../lib/projectGrids'
@@ -224,6 +225,10 @@ export function normalizePreferences(raw: LegacyPreferences | undefined): Prefer
       ),
       spawnGraceSeconds: Math.min(900, Math.max(30, Math.round(resourcePolicy.spawnGraceSeconds))),
     },
+    contextWarning: normalizeContextWarning(
+      raw?.contextWarning,
+      DEFAULT_PREFERENCES.contextWarning,
+    ),
     router9: {
       ...router9,
       enabled: Boolean(router9.enabled),

@@ -823,6 +823,15 @@ export const en = {
   'prefs.spawnConcurrencyDecrease': 'Fewer parallel spawns',
   'prefs.spawnConcurrencyIncrease': 'More parallel spawns',
   'prefs.spawnConcurrencyReset': 'Reset to default',
+  'prefs.contextWarning': 'Context warning',
+  'prefs.contextWarningDesc':
+    "Shows each agent terminal's current context (prompt size of the last turn). Yellow and red past these limits; no sound or blinking.",
+  'prefs.contextWarningEnable': 'Show the context badge on agent terminals',
+  'prefs.contextWarningYellow': 'Yellow from',
+  'prefs.contextWarningRed': 'Red from',
+  'prefs.contextWarningDecrease': 'Lower "{label}"',
+  'prefs.contextWarningIncrease': 'Raise "{label}"',
+  'prefs.contextWarningReset': 'Reset "{label}" to default',
   'prefs.gsdSyncModelsTitle': 'GSD Sync model fallback chain',
   'prefs.gsdSyncModelsDesc':
     'Backup models for the GSD Sync child session, tried in order if the mirrored model fails.',
@@ -2755,6 +2764,18 @@ export const en = {
   'hud.empty': 'No agents running',
   'hud.collapse': 'Collapse',
   'hud.expand': 'Expand spend panel',
+  'context.badge': '{tokens} ctx',
+  'context.badgeTitle': 'Context of the last turn: {tokens} tokens',
+  'context.highTitle': 'High context: open a new session from {file}',
+  'context.resumeAction': 'Update {file} and open a new session',
+  'context.resumeUpdating': 'Waiting for the agent to update {file}…',
+  'context.resumeUpdatePrompt':
+    'Update {file} in this folder so a fresh session can continue this work: goal, current state, decisions made, files touched, open problems and next steps. Keep it short and factual. When done, reply only "{file} updated".',
+  'context.resumeBootstrapPrompt':
+    'Read {file} in this folder and continue the work from where it stopped. Before acting, confirm in one short paragraph what you understood.',
+  'context.resumePaneName': '{agent} · resume',
+  'context.resumeTimeout': 'The resume file did not change; opening the new session anyway.',
+  'context.resumeFailed': 'Could not start the resume session',
   'hud.agentsRunning': '{count} agents',
 
   /* ---- crash watch ---- */

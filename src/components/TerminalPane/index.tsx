@@ -43,6 +43,7 @@ import {
   type SubTab,
   type Terminal as TerminalEntry,
   type Theme,
+  UNRESTRICTED_FLAG,
 } from '../../lib/types'
 import { useProjectsStore } from '../../stores/projectsStore'
 import { useTerminalsStore } from '../../stores/terminalsStore'
@@ -51,6 +52,7 @@ import { GhosttySurface } from '../GhosttySurface'
 import { AgentIcon, VSCodeIcon } from '../icons/AgentIcons'
 import { SubTabsLane } from '../SubTabsLane'
 import { XTermView } from '../XTermView'
+import { ContextBadge, ContextBanner } from './ContextNotice'
 import styles from './TerminalPane.module.css'
 import { WslBadge } from './WslBadge'
 
@@ -503,6 +505,7 @@ export const TerminalPane = memo(function TerminalPane({
                     </span>
                   )}
                   <WslBadge cwd={cwd} />
+                  <ContextBadge ptyId={activeTab.ptyId ?? undefined} />
                 </div>
               </>
             ) : null}
@@ -655,6 +658,18 @@ export const TerminalPane = memo(function TerminalPane({
           </div>
         ) : null}
       </header>
+
+      {activeTab && !preview ? (
+        <ContextBanner
+          ptyId={activeTab.ptyId ?? undefined}
+          projectId={projectId}
+          agent={activeTab.type}
+          cwd={activeTab.cwd?.trim() || cwd}
+          extraArgs={(activeTab.extraArgs ?? []).filter((arg) =>
+            Object.values(UNRESTRICTED_FLAG).includes(arg),
+          )}
+        />
+      ) : null}
 
       <div className={styles.body}>
         {effectiveLaneVisible && !preview ? (

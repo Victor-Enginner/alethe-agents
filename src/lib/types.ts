@@ -859,6 +859,8 @@ export type Preferences = {
 
   resourcePolicy: ResourcePolicyPreferences
 
+  /** Per-terminal context-size badge (yellow/red) thresholds, in tokens. */
+  contextWarning: ContextWarningPreferences
   workspaceGridLayout?: GridLayout
   /** Most recently saved custom layouts for the workspace. */
   workspaceGridLayoutHistory?: GridLayoutHistoryEntry[]
@@ -898,6 +900,12 @@ export type Preferences = {
 export type ResourcePolicyMode = 'smart-lru' | 'manual'
 
 export type ResourcePolicyPreferences = {
+export type ContextWarningPreferences = {
+  enabled: boolean
+  warnTokens: number
+  criticalTokens: number
+}
+
   mode: ResourcePolicyMode
   /** True only after the user explicitly enables automatic runtime parking. */
   automaticParkingOptIn: boolean
@@ -1053,6 +1061,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   voiceCommandApiKey: '',
   spawnConcurrency: 3,
   resourcePolicy: {
+  contextWarning: { enabled: true, warnTokens: 200_000, criticalTokens: 300_000 },
     mode: 'manual',
     automaticParkingOptIn: false,
     memoryBudgetMb: 1536,

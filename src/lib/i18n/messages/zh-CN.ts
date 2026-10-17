@@ -736,6 +736,15 @@ export const zhCN: Record<MessageKey, string> = {
   'prefs.spawnConcurrencyDecrease': '平行生成较少',
   'prefs.spawnConcurrencyIncrease': '更多平行生成',
   'prefs.spawnConcurrencyReset': '重置为默认',
+  'prefs.contextWarning': '上下文提醒',
+  'prefs.contextWarningDesc':
+    '显示每个智能体终端的当前上下文（上一轮的提示大小）。超过这些阈值时显示黄色和红色；无声音、不闪烁。',
+  'prefs.contextWarningEnable': '在智能体终端上显示上下文标记',
+  'prefs.contextWarningYellow': '黄色起始',
+  'prefs.contextWarningRed': '红色起始',
+  'prefs.contextWarningDecrease': '降低“{label}”',
+  'prefs.contextWarningIncrease': '提高“{label}”',
+  'prefs.contextWarningReset': '将“{label}”重置为默认',
   'prefs.gsdSyncModelsTitle': 'GSD 同步模型回退链',
   'prefs.gsdSyncModelsDesc': 'GSD Sync 子会话的备份模型，如果镜像模型失败，则按顺序尝试。',
   'prefs.gsdSyncModelsHint':
@@ -2456,6 +2465,18 @@ export const zhCN: Record<MessageKey, string> = {
   'hud.noCost': '无价格',
   'hud.empty': '没有运行中的代理',
   'hud.collapse': '崩溃',
+  'context.badge': '{tokens} 上下文',
+  'context.badgeTitle': '上一轮上下文：{tokens} 个 token',
+  'context.highTitle': '上下文过高：请从 {file} 打开新会话',
+  'context.resumeAction': '更新 {file} 并打开新会话',
+  'context.resumeUpdating': '正在等待智能体更新 {file}…',
+  'context.resumeUpdatePrompt':
+    '请更新此文件夹中的 {file}，以便新会话继续这项工作：目标、当前状态、已做决定、改动的文件、未解决问题和下一步。简短、客观。完成后只回复“{file} 已更新”。',
+  'context.resumeBootstrapPrompt':
+    '阅读此文件夹中的 {file}，从中断处继续工作。行动前先用一小段话确认你的理解。',
+  'context.resumePaneName': '{agent} · 恢复',
+  'context.resumeTimeout': '恢复文件没有变化；仍然打开新会话。',
+  'context.resumeFailed': '无法启动恢复会话',
   'hud.expand': '展开支出面板',
   'hud.agentsRunning': '{count} 个代理',
   /* ---- crash watch ---- */

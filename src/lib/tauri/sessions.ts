@@ -43,6 +43,8 @@ export type SessionCost = {
   cost_usd: number | null
   model: string | null
   by_model: ModelCost[]
+  /** Prompt size of the latest turn; null when the agent does not report it. */
+  context_tokens?: number | null
 }
 
 export async function getSessionCost(

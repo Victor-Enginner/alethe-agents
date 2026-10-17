@@ -1,0 +1,64 @@
+.badge {
+  font: 600 10px var(--font-mono);
+  letter-spacing: 0.02em;
+  color: var(--fg-muted);
+  background: var(--bg-sunken);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0 5px;
+  line-height: 15px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.warn {
+  color: var(--status-waiting);
+  background: var(--status-waiting-soft);
+  border-color: var(--status-waiting);
+}
+
+.critical {
+  color: var(--project-red);
+  border-color: var(--project-red);
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px;
+  border-bottom: 1px solid var(--project-red);
+  background: var(--bg-sunken);
+  font-size: 12px;
+  color: var(--fg);
+}
+
+.bannerText {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--project-red);
+}
+
+.bannerAction {
+  flex-shrink: 0;
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  color: var(--fg);
+  background: var(--panel);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.bannerAction:hover:not(:disabled) {
+  background: var(--panel-hover);
+}
+
+.bannerAction:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}

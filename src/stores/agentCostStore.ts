@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { create } from 'zustand'
 
 import { getActiveSessions } from '../lib/sessionResume'
@@ -65,8 +66,16 @@ export const useAgentCostStore = create<AgentCostState>((set) => ({
     set((state) => {
       const next: Record<string, AgentCostEntry> = {}
 
+      let changed = Object.keys(state.byPtyId).length !== live.length
       for (const s of live) {
         const fresh = results.find((r) => r && r.ptyId === s.ptyId) ?? null
+        const previous = state.byPtyId[s.ptyId]
+        // Keep the old object when nothing moved, so subscribers skip a re-render.
+        if (fresh && previous && sameCost(previous.cost, fresh.cost)) {
+          next[s.ptyId] = previous
+          continue
+        }
+        changed = true
         next[s.ptyId] = fresh ??
           state.byPtyId[s.ptyId] ?? {
             ptyId: s.ptyId,
@@ -77,12 +86,35 @@ export const useAgentCostStore = create<AgentCostState>((set) => ({
             updatedAt: 0,
           }
       }
-      // Poda PTYs que morreram.
+      // Drops PTYs that died.
       void liveIds
-      return { byPtyId: next }
+      return changed ? { byPtyId: next } : state
     })
   },
 }))
+
+function sameCost(a: SessionCost | null, b: SessionCost | null): boolean {
+  if (!a || !b) return a === b
+  return (
+    a.total_tokens === b.total_tokens &&
+    a.cost_usd === b.cost_usd &&
+    a.model === b.model &&
+    (a.context_tokens ?? null) === (b.context_tokens ?? null)
+  )
+}
+
+export const CONTEXT_POLL_MS = 15_000
+
+/** App-wide, low-frequency refresh that feeds the per-terminal context badge. */
+export function useAgentCostPolling(enabled: boolean): void {
+  useEffect(() => {
+    if (!enabled) return
+    const refresh = () => void useAgentCostStore.getState().refresh()
+    refresh()
+    const timer = window.setInterval(refresh, CONTEXT_POLL_MS)
+    return () => window.clearInterval(timer)
+  }, [enabled])
+}
 
 export function selectCostTotals(state: AgentCostState): {
   costUsd: number

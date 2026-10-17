@@ -3,6 +3,8 @@ import { useState } from 'react'
 
 import { cliPathMatchesAgent } from '../../../lib/agentCliPath'
 import { agentLabel, resolveAgentCliCommand } from '../../../lib/agentProviders'
+import { normalizeContextWarning } from '../../../lib/contextWarning'
+import { fmtTokens } from '../../../lib/costFormat'
 import { pickFile } from '../../../lib/dialog'
 import { useT, useTDynamic } from '../../../lib/i18n'
 import { isMacOS, isWindows } from '../../../lib/platform'
@@ -10,6 +12,8 @@ import { countLiveResumablePanes, resetLastSession } from '../../../lib/resetLas
 import {
   agentCliCommand,
   type AgentType,
+  type ContextWarningPreferences,
+  DEFAULT_PREFERENCES,
   DEFAULT_TERMINAL_FONT_FAMILY,
   isShellAgentType,
 } from '../../../lib/types'
@@ -38,6 +42,8 @@ const AGENTS: { id: AgentType; label: string }[] = [
   { id: 'codewhale', label: 'Codewhale' },
 ]
 
+const CONTEXT_STEP = 10_000
+
 export function TerminalPage({ enabledCount }: { enabledCount: number }) {
   const t = useT()
   const tDynamic = useTDynamic()
@@ -56,6 +62,15 @@ export function TerminalPage({ enabledCount }: { enabledCount: number }) {
       spawnConcurrency: Math.min(
         SPAWN_CONCURRENCY_LIMITS.max,
         Math.max(SPAWN_CONCURRENCY_LIMITS.min, n),
+      ),
+    })
+
+  const contextWarning = preferences.contextWarning
+  const setContextWarning = (patch: Partial<ContextWarningPreferences>) =>
+    setPreferences({
+      contextWarning: normalizeContextWarning(
+        { ...contextWarning, ...patch },
+        DEFAULT_PREFERENCES.contextWarning,
       ),
     })
 
@@ -183,6 +198,57 @@ export function TerminalPage({ enabledCount }: { enabledCount: number }) {
             <RotateCcw size={15} />
           </button>
         </div>
+      </SettingsSection>
+
+      <SettingsSection
+        id="context-warning"
+        title={t('prefs.contextWarning')}
+        description={t('prefs.contextWarningDesc')}
+      >
+        <label className={styles.checkboxCard}>
+          <input
+            type="checkbox"
+            checked={contextWarning.enabled}
+            onChange={(event) => setContextWarning({ enabled: event.target.checked })}
+          />
+          <span>{t('prefs.contextWarningEnable')}</span>
+        </label>
+        {(
+          [
+            ['warnTokens', 'prefs.contextWarningYellow'],
+            ['criticalTokens', 'prefs.contextWarningRed'],
+          ] as const
+        ).map(([key, label]) => (
+          <div key={key} className={styles.zoomControl} aria-label={t(label)} role="group">
+            <button
+              type="button"
+              onClick={() => setContextWarning({ [key]: contextWarning[key] - CONTEXT_STEP })}
+              disabled={!contextWarning.enabled}
+              aria-label={t('prefs.contextWarningDecrease', { label: t(label) })}
+            >
+              <Minus size={15} />
+            </button>
+            <strong title={t(label)}>
+              {t(label)} · {fmtTokens(contextWarning[key])}
+            </strong>
+            <button
+              type="button"
+              onClick={() => setContextWarning({ [key]: contextWarning[key] + CONTEXT_STEP })}
+              disabled={!contextWarning.enabled}
+              aria-label={t('prefs.contextWarningIncrease', { label: t(label) })}
+            >
+              <Plus size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setContextWarning({ [key]: DEFAULT_PREFERENCES.contextWarning[key] })}
+              disabled={contextWarning[key] === DEFAULT_PREFERENCES.contextWarning[key]}
+              aria-label={t('prefs.contextWarningReset', { label: t(label) })}
+            >
+              <RotateCcw size={15} />
+            </button>
+          </div>
+        ))}
       </SettingsSection>
 
       <SettingsSection
