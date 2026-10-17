@@ -921,7 +921,7 @@ export const en = {
   'prefs.orchestrationModelsFailed':
     'Could not list the Codex models ({error}). You can still type a model name.',
   'prefs.orchestrationCustomModel': 'Use "{value}"',
-  'prefs.orchestrationCodexOnly': 'Codex workers only',
+  'prefs.orchestrationCodexOnly': 'Not available for Claude workers',
   'prefs.orchestrationRouting': 'Routing',
   'prefs.orchestrationRoutingDesc':
     'Which role a delegated call runs as when the planner leaves the choice to Alethe.',
@@ -2764,9 +2764,6 @@ export const en = {
   'hud.total': 'Total',
   'hud.tokens': 'tokens',
   'hud.noCost': 'no price',
-  'hud.empty': 'No agents running',
-  'hud.collapse': 'Collapse',
-  'hud.expand': 'Expand spend panel',
   'context.badge': '{tokens} ctx',
   'context.badgeTitle': 'Context of the last turn: {tokens} tokens',
   'context.highTitle': 'High context: open a new session from {file}',
@@ -2779,6 +2776,9 @@ export const en = {
   'context.resumePaneName': '{agent} · resume',
   'context.resumeTimeout': 'The resume file did not change; opening the new session anyway.',
   'context.resumeFailed': 'Could not start the resume session',
+  'hud.empty': 'No agents running',
+  'hud.collapse': 'Collapse',
+  'hud.expand': 'Expand spend panel',
   'hud.agentsRunning': '{count} agents',
 
   /* ---- crash watch ---- */

@@ -626,12 +626,13 @@ export const DEFAULT_ROUTER9_PREFERENCES: Router9Preferences = {
 /** A named preset for delegated workers. A delegate call that names it gets exactly these values. */
 export type OrchestrationRole = {
   name: string
-  agent: 'codex' | 'claude'
+  /** agy and opencode run one process per turn and spend neither Claude nor Codex quota. */
+  agent: 'codex' | 'claude' | 'agy' | 'opencode'
   /** null runs the CLI's default model. */
   model: string | null
   /** Reasoning effort, as the chosen CLI names it; null keeps the CLI's setting. */
   effort: string | null
-  /** Codex read-only sandbox. Always false for Claude. */
+  /** Read-only worker (Codex sandbox, agy plan mode, OpenCode plan agent). Always false for Claude. */
   readOnly: boolean
   /** null uses the default budget; 0 lets the worker run without a limit. */
   timeoutSeconds: number | null
@@ -858,9 +859,9 @@ export type Preferences = {
   spawnConcurrency: number
 
   resourcePolicy: ResourcePolicyPreferences
-
   /** Per-terminal context-size badge (yellow/red) thresholds, in tokens. */
   contextWarning: ContextWarningPreferences
+
   workspaceGridLayout?: GridLayout
   /** Most recently saved custom layouts for the workspace. */
   workspaceGridLayoutHistory?: GridLayoutHistoryEntry[]
@@ -899,13 +900,13 @@ export type Preferences = {
 
 export type ResourcePolicyMode = 'smart-lru' | 'manual'
 
-export type ResourcePolicyPreferences = {
 export type ContextWarningPreferences = {
   enabled: boolean
   warnTokens: number
   criticalTokens: number
 }
 
+export type ResourcePolicyPreferences = {
   mode: ResourcePolicyMode
   /** True only after the user explicitly enables automatic runtime parking. */
   automaticParkingOptIn: boolean
@@ -1060,8 +1061,8 @@ export const DEFAULT_PREFERENCES: Preferences = {
   dictationMicrophoneLabel: null,
   voiceCommandApiKey: '',
   spawnConcurrency: 3,
-  resourcePolicy: {
   contextWarning: { enabled: true, warnTokens: 200_000, criticalTokens: 300_000 },
+  resourcePolicy: {
     mode: 'manual',
     automaticParkingOptIn: false,
     memoryBudgetMb: 1536,

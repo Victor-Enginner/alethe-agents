@@ -25,7 +25,14 @@ import styles from './OrchestrationPage.module.css'
 import { SettingsSection } from './primitives'
 import { RoutingSection } from './RoutingSection'
 
-const AGENTS: OrchestrationRole['agent'][] = ['codex', 'claude']
+const AGENTS: OrchestrationRole['agent'][] = ['codex', 'claude', 'agy', 'opencode']
+
+/** Effort names the role's CLI accepts; none for OpenCode. */
+function effortsFor(role: OrchestrationRole, codexEfforts: readonly string[]): readonly string[] {
+  if (role.agent === 'codex') return codexEfforts
+  if (role.agent === 'opencode') return []
+  return CLAUDE_EFFORTS
+}
 const ORCHESTRATORS: NonNullable<OrchestrationRole['orchestrator']>[] = ['claude', 'codex']
 const SKILL_PROVIDERS: Array<{
   value: OrchestrationSkillSettings['conserveProvider']
@@ -137,7 +144,7 @@ export function OrchestrationPage() {
   const setModel = (index: number, role: OrchestrationRole, value: string) => {
     if (value !== '' && !isOrchestrationName(value)) return
     const model = value || null
-    const efforts: readonly string[] = role.agent === 'codex' ? effortsOf(model) : CLAUDE_EFFORTS
+    const efforts = effortsFor({ ...role, model }, effortsOf(model))
     const effort = role.effort && efforts.includes(role.effort) ? role.effort : null
     saveRole(index, { model, effort })
   }
@@ -368,7 +375,8 @@ export function OrchestrationPage() {
                     agent: agentLabel(role.orchestrator),
                   })
                 : name
-              const codex = role.agent === 'codex'
+              // The headless Claude worker has no read-only mode; the others do.
+              const canReadOnly = role.agent !== 'claude'
               const draft =
                 nameDraft && nameDraft.index === index && nameDraft.base === role.name
                   ? nameDraft.text
@@ -434,7 +442,7 @@ export function OrchestrationPage() {
                       ariaLabel={t('prefs.orchestrationEffortFor', { name: label })}
                       options={[
                         { value: '', label: t('prefs.orchestrationModelDefault') },
-                        ...(codex ? effortsOf(role.model) : CLAUDE_EFFORTS).map((effort) => ({
+                        ...effortsFor(role, effortsOf(role.model)).map((effort) => ({
                           value: effort,
                           label: effort,
                         })),
@@ -447,8 +455,8 @@ export function OrchestrationPage() {
                       className={styles.switch}
                       aria-checked={role.readOnly}
                       aria-label={t('prefs.orchestrationReadOnlyFor', { name: label })}
-                      disabled={!codex}
-                      title={codex ? undefined : t('prefs.orchestrationCodexOnly')}
+                      disabled={!canReadOnly}
+                      title={canReadOnly ? undefined : t('prefs.orchestrationCodexOnly')}
                       onClick={() => saveRole(index, { readOnly: !role.readOnly })}
                     />
                     <input

@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 
 import { translate } from '../lib/i18n'
 import { normalizeOrchestrationSettings } from '../lib/orchestrationSettings'
-import { orchestratorApplySettings } from '../lib/tauri/orchestrator'
+import { orchestratorApplySettings, orchestratorSetRouter9Key } from '../lib/tauri/orchestrator'
 import { useProjectsStore } from '../stores/projectsStore'
 import { useUiStore } from '../stores/uiStore'
 
@@ -14,6 +14,15 @@ export function useOrchestrationSettingsSync(): void {
   const hydrated = useProjectsStore((state) => state.hydrated)
   const settings = useProjectsStore((state) => state.preferences.orchestration)
   const pushToast = useUiStore((state) => state.pushToast)
+  const router9Key = useProjectsStore((state) =>
+    state.preferences.router9?.enabled ? state.preferences.router9.apiKey.trim() : '',
+  )
+
+  // OpenCode workers reach the 9router combos with this key; it stays in their environment only.
+  useEffect(() => {
+    if (!hydrated) return
+    orchestratorSetRouter9Key(router9Key || null).catch(() => undefined)
+  }, [hydrated, router9Key])
 
   useEffect(() => {
     // Before the saved file is read these are only the defaults.

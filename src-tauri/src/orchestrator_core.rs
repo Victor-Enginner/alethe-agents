@@ -58,6 +58,8 @@ pub struct Launcher {
     pub program: PathBuf,
     pub args: Vec<String>,
     pub env: Vec<(String, String)>,
+    /// Set for CLIs driven one process per turn; `None` for the long-lived Codex and Claude workers.
+    pub one_shot: Option<OneShotSpec>,
 }
 
 impl Launcher {
@@ -67,6 +69,7 @@ impl Launcher {
             program,
             args: vec!["app-server".into(), "--stdio".into()],
             env: Vec::new(),
+            one_shot: None,
         }
     }
 
@@ -87,7 +90,206 @@ impl Launcher {
                 "bypassPermissions".into(),
             ],
             env: Vec::new(),
+            one_shot: None,
         }
+    }
+
+    /// Antigravity CLI: `agy --output-format json -p=<prompt>` prints one result object. It takes
+    /// the prompt only as an argument, so the task travels in a file. Writable roles auto-accept
+    /// edits; nothing here skips its permission checks.
+    pub fn agy_one_shot(program: PathBuf) -> Self {
+        Self {
+            kind: "agy".into(),
+            program,
+            args: vec!["--output-format".into(), "json".into()],
+            env: Vec::new(),
+            one_shot: Some(OneShotSpec {
+                prompt: PromptVia::TaskFileArg { flag: "-p=".into() },
+                resume_flag: "--conversation".into(),
+                model_flag: Some("--model".into()),
+                effort_flag: Some("--effort".into()),
+                read_only_args: vec!["--mode".into(), "plan".into()],
+                writable_args: vec!["--mode".into(), "accept-edits".into()],
+            }),
+        }
+    }
+
+    /// OpenCode: `opencode run --format json` reads the prompt from stdin and streams events. A
+    /// read-only role runs its built-in `plan` agent; a writable one auto-approves permissions
+    /// that are not explicitly denied.
+    pub fn opencode_one_shot(program: PathBuf) -> Self {
+        Self {
+            kind: "opencode".into(),
+            program,
+            args: vec!["run".into(), "--format".into(), "json".into()],
+            env: Vec::new(),
+            one_shot: Some(OneShotSpec {
+                prompt: PromptVia::Stdin,
+                resume_flag: "--session".into(),
+                model_flag: Some("-m".into()),
+                effort_flag: None,
+                read_only_args: vec!["--agent".into(), "plan".into()],
+                writable_args: vec!["--auto".into()],
+            }),
+        }
+    }
+}
+
+/// How the text of a turn reaches a one-shot CLI.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum PromptVia {
+    /// Piped on stdin, then closed.
+    Stdin,
+    /// The CLI only takes the prompt as an argument. Passing the task itself there would hit the
+    /// Windows command-line limit and the quoting of `.cmd` shims, so the text goes into a file in
+    /// the worker's folder and the argument (`flag` + pointer) only names that file.
+    TaskFileArg { flag: String },
+}
+
+/// A worker CLI driven one process per turn: the prompt goes in, a JSON result comes out on
+/// stdout, and the conversation id it reports resumes the thread on the next turn.
+#[derive(Clone, Debug)]
+pub struct OneShotSpec {
+    pub prompt: PromptVia,
+    /// Flag that takes the conversation id to continue (`--conversation`, `--session`).
+    pub resume_flag: String,
+    pub model_flag: Option<String>,
+    pub effort_flag: Option<String>,
+    /// Added when the role is read-only.
+    pub read_only_args: Vec<String>,
+    /// Added when the role may write.
+    pub writable_args: Vec<String>,
+}
+
+/// Folder, inside the worker's cwd, that holds the task file of a `TaskFileArg` turn while it runs.
+const ONE_SHOT_TASK_DIR: &str = ".alethe/tasks";
+const ONE_SHOT_STDERR_LIMIT: usize = 4_000;
+
+/// The arguments one turn adds after the launcher's own.
+fn one_shot_args(
+    spec: &OneShotSpec,
+    resume: Option<&str>,
+    model: Option<&str>,
+    effort: Option<&str>,
+    read_only: bool,
+) -> Vec<String> {
+    let mut args = Vec::new();
+    if let (Some(flag), Some(model)) = (spec.model_flag.as_ref(), model) {
+        args.extend([flag.clone(), model.to_string()]);
+    }
+    if let (Some(flag), Some(effort)) = (spec.effort_flag.as_ref(), effort) {
+        args.extend([flag.clone(), effort.to_string()]);
+    }
+    if let Some(thread) = resume {
+        args.extend([spec.resume_flag.clone(), thread.to_string()]);
+    }
+    args.extend(if read_only {
+        spec.read_only_args.iter().cloned()
+    } else {
+        spec.writable_args.iter().cloned()
+    });
+    args
+}
+
+/// What one one-shot turn reported, read line by line from its stdout.
+#[derive(Default, Debug)]
+pub(crate) struct OneShotTurn {
+    pub(crate) thread_id: Option<String>,
+    pub(crate) text: String,
+    pub(crate) error: Option<String>,
+    /// Token counts in the shape `claude_token_count` produces.
+    pub(crate) tokens: Option<Value>,
+}
+
+impl OneShotTurn {
+    fn add_tokens(&mut self, input: u64, output: u64, cached: u64, cache_creation: u64) {
+        let turn = json!({
+            "totalTokens": input.saturating_add(output).saturating_add(cached).saturating_add(cache_creation),
+            "inputTokens": input,
+            "outputTokens": output,
+            "cachedInputTokens": cached,
+            "cacheCreationInputTokens": cache_creation,
+        });
+        self.tokens = Some(match self.tokens.take() {
+            Some(total) => add_token_counts(&total, &turn),
+            None => turn,
+        });
+    }
+}
+
+/// Reads one JSON line from a one-shot worker. Two shapes are understood, told apart by their
+/// fields rather than by which CLI sent them: a single result object (`status` + `response`, as
+/// `agy --output-format json` prints) and an event stream (`type` + `sessionID`, as
+/// `opencode run --format json` prints). Returns the text this line added, for the live view.
+pub(crate) fn read_one_shot_line(turn: &mut OneShotTurn, message: &Value) -> Option<String> {
+    let text_of = |value: Option<&Value>| value.and_then(Value::as_str).map(str::to_string);
+    if message.get("status").is_some() && message.get("response").is_some() {
+        if let Some(id) = text_of(message.get("conversation_id")).filter(|id| !id.is_empty()) {
+            turn.thread_id = Some(id);
+        }
+        if message.get("status").and_then(Value::as_str) != Some("SUCCESS") {
+            turn.error = Some(
+                text_of(message.get("error"))
+                    .filter(|error| !error.trim().is_empty())
+                    .unwrap_or_else(|| "the worker reported an error".to_string()),
+            );
+        }
+        if let Some(usage) = message.get("usage") {
+            let count = |key: &str| usage.get(key).and_then(Value::as_u64).unwrap_or(0);
+            turn.add_tokens(
+                count("input_tokens"),
+                count("output_tokens"),
+                count("cache_read_tokens"),
+                0,
+            );
+        }
+        let response = text_of(message.get("response")).unwrap_or_default();
+        if response.trim().is_empty() {
+            return None;
+        }
+        turn.text = response.clone();
+        return Some(response);
+    }
+
+    if let Some(id) = text_of(message.get("sessionID")).filter(|id| !id.is_empty()) {
+        turn.thread_id = Some(id);
+    }
+    let part = message.get("part");
+    match message.get("type").and_then(Value::as_str).unwrap_or("") {
+        "text" => {
+            let text = text_of(part.and_then(|p| p.get("text")))?;
+            if text.trim().is_empty() {
+                return None;
+            }
+            if !turn.text.is_empty() {
+                turn.text.push_str("\n\n");
+            }
+            turn.text.push_str(&text);
+            Some(text)
+        }
+        "step_finish" => {
+            let tokens = part.and_then(|p| p.get("tokens"))?;
+            let count = |value: Option<&Value>| value.and_then(Value::as_u64).unwrap_or(0);
+            let cache = tokens.get("cache");
+            turn.add_tokens(
+                count(tokens.get("input")),
+                count(tokens.get("output")).saturating_add(count(tokens.get("reasoning"))),
+                count(cache.and_then(|c| c.get("read"))),
+                count(cache.and_then(|c| c.get("write"))),
+            );
+            None
+        }
+        "error" => {
+            let error = message.get("error");
+            turn.error = Some(
+                text_of(error.and_then(|e| e.get("data")).and_then(|d| d.get("message")))
+                    .or_else(|| text_of(error.and_then(|e| e.get("message"))))
+                    .or_else(|| text_of(error))
+                    .unwrap_or_else(|| message.to_string()),
+            );
+            None
+        }
+        _ => None,
     }
 }
 
@@ -2071,6 +2273,20 @@ impl Core {
             );
             return;
         };
+        if let Some(shot) = launcher.one_shot.clone() {
+            self.spawn_one_shot(
+                job_id,
+                &launcher,
+                &shot,
+                &cwd,
+                &spec,
+                resume_thread.as_deref(),
+                model.as_deref(),
+                effort.as_deref(),
+                sandbox == SANDBOX_READ_ONLY,
+            );
+            return;
+        }
         let is_claude = agent == "claude";
 
         let mut command = Command::new(&launcher.program);
@@ -2225,6 +2441,262 @@ impl Core {
                     true,
                 );
             });
+        }
+    }
+
+    /// Whether `agent` is driven one process per turn.
+    fn is_one_shot(&self, agent: &str) -> bool {
+        guard(&self.launchers)
+            .get(agent)
+            .is_some_and(|launcher| launcher.one_shot.is_some())
+    }
+
+    /// Adds `value` (or removes it, on `None`) to the environment of the `kind` launcher. Used for
+    /// secrets the app only knows after start, such as the local gateway key an OpenCode worker
+    /// needs; it never leaves the process environment.
+    pub fn set_launcher_env(&self, kind: &str, key: &str, value: Option<String>) {
+        let mut launchers = guard(&self.launchers);
+        if let Some(launcher) = launchers.get_mut(kind) {
+            launcher.env.retain(|(name, _)| name != key);
+            if let Some(value) = value.filter(|value| !value.is_empty()) {
+                launcher.env.push((key.to_string(), value));
+            }
+        }
+    }
+
+    /// Queues a stopped one-shot worker for another turn when messages are waiting for it. The
+    /// next `spawn_worker` takes the first message as its turn and resumes the same conversation.
+    fn requeue_waiting(&self, job_id: &str) {
+        {
+            let mut inner = guard(&self.inner);
+            let Some(job) = inner.jobs.get_mut(job_id) else {
+                return;
+            };
+            if !job.settled() || job.inbox.is_empty() || job.thread_id.is_none() {
+                return;
+            }
+            job.status = STATUS_QUEUED.to_string();
+            job.superseded_by = None;
+            inner.queue.push_back(job_id.to_string());
+            self.notify(&inner);
+        }
+        self.persist();
+        self.drain_queue();
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn spawn_one_shot(
+        &self,
+        job_id: &str,
+        launcher: &Launcher,
+        shot: &OneShotSpec,
+        cwd: &str,
+        text: &str,
+        resume: Option<&str>,
+        model: Option<&str>,
+        effort: Option<&str>,
+        read_only: bool,
+    ) {
+        let mut command = Command::new(&launcher.program);
+        command
+            .args(&launcher.args)
+            .args(one_shot_args(shot, resume, model, effort, read_only))
+            .current_dir(PathBuf::from(cwd))
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+
+        let task_file = match &shot.prompt {
+            PromptVia::Stdin => {
+                command.stdin(Stdio::piped());
+                None
+            }
+            PromptVia::TaskFileArg { flag } => {
+                command.stdin(Stdio::null());
+                let turn = guard(&self.inner)
+                    .jobs
+                    .get(job_id)
+                    .map_or(0, |job| job.next_request_id);
+                let relative = format!("{ONE_SHOT_TASK_DIR}/{job_id}-{turn}.md");
+                let path = PathBuf::from(cwd).join(&relative);
+                let written = path
+                    .parent()
+                    .map_or(Ok(()), std::fs::create_dir_all)
+                    .and_then(|_| std::fs::write(&path, text));
+                if let Err(error) = written {
+                    self.settle(
+                        job_id,
+                        STATUS_FAILED,
+                        "failed",
+                        &format!("could not write the task file {relative}: {error}"),
+                    );
+                    return;
+                }
+                command.arg(format!(
+                    "{flag}Your whole task is in the file {relative} (relative to the working directory). Read all of it first, then do what it says. Do not edit or delete that file."
+                ));
+                Some(path)
+            }
+        };
+        for (key, value) in &launcher.env {
+            command.env(key, value);
+        }
+        #[cfg(windows)]
+        {
+            use std::os::windows::process::CommandExt;
+            const CREATE_NO_WINDOW: u32 = 0x0800_0000;
+            command.creation_flags(CREATE_NO_WINDOW);
+        }
+
+        let remove_task = |path: &Option<PathBuf>| {
+            if let Some(path) = path {
+                let _ = std::fs::remove_file(path);
+            }
+        };
+        let mut child = match command.spawn() {
+            Ok(child) => child,
+            Err(error) => {
+                remove_task(&task_file);
+                self.settle(
+                    job_id,
+                    STATUS_FAILED,
+                    "failed",
+                    &format!("worker spawn failed: {error}"),
+                );
+                return;
+            }
+        };
+        if let Some(mut stdin) = child.stdin.take() {
+            let text = text.to_string();
+            // Detached: a CLI that writes before it finishes reading must not block on us.
+            thread::spawn(move || {
+                let _ = stdin.write_all(text.as_bytes());
+            });
+        }
+        let stdout = child.stdout.take();
+        let stderr = child.stderr.take();
+        let child = Arc::new(Mutex::new(child));
+        {
+            let mut inner = guard(&self.inner);
+            if let Some(job) = inner.jobs.get_mut(job_id) {
+                job.next_request_id += 1;
+                job.child = Some(Arc::clone(&child));
+            }
+            self.notify(&inner);
+        }
+        let timeout_ms = guard(&self.inner)
+            .jobs
+            .get(job_id)
+            .and_then(|job| job.timeout_ms);
+        if let Some(timeout_ms) = timeout_ms {
+            self.arm_watchdog(job_id, timeout_ms);
+        }
+
+        let stderr_tail = Arc::new(Mutex::new(String::new()));
+        if let Some(stderr) = stderr {
+            let sink = Arc::clone(&stderr_tail);
+            thread::spawn(move || {
+                for line in BufReader::new(stderr).lines().map_while(Result::ok) {
+                    let mut tail = guard(&sink);
+                    tail.push_str(&line);
+                    tail.push('\n');
+                    if tail.len() > ONE_SHOT_STDERR_LIMIT {
+                        let mut cut = tail.len() - ONE_SHOT_STDERR_LIMIT;
+                        while !tail.is_char_boundary(cut) {
+                            cut += 1;
+                        }
+                        tail.drain(..cut);
+                    }
+                }
+            });
+        }
+
+        let core = self.clone();
+        let owned_id = job_id.to_string();
+        thread::spawn(move || {
+            let mut turn = OneShotTurn::default();
+            if let Some(stdout) = stdout {
+                for line in BufReader::new(stdout).lines() {
+                    let Ok(line) = line else { break };
+                    let Ok(message) = serde_json::from_str::<Value>(line.trim()) else {
+                        continue;
+                    };
+                    if let Some(text) = read_one_shot_line(&mut turn, &message) {
+                        let mut inner = guard(&core.inner);
+                        if let Some(job) = inner.jobs.get_mut(&owned_id) {
+                            push_reply(&mut job.reply, &text);
+                        }
+                        core.notify(&inner);
+                    }
+                }
+            }
+            let exited_ok = guard(&child)
+                .wait()
+                .map(|status| status.success())
+                .unwrap_or(false);
+            remove_task(&task_file);
+            // Give the stderr reader a moment to drain what the process printed last.
+            thread::sleep(Duration::from_millis(50));
+            let stderr = guard(&stderr_tail).trim().to_string();
+            core.complete_one_shot(&owned_id, turn, exited_ok, stderr);
+        });
+    }
+
+    fn complete_one_shot(&self, job_id: &str, turn: OneShotTurn, exited_ok: bool, stderr: String) {
+        let cwd = {
+            let mut inner = guard(&self.inner);
+            let Some(job) = inner.jobs.get_mut(job_id) else {
+                return;
+            };
+            // Cancelled or out of budget meanwhile: that ending already stands.
+            if job.settled() {
+                return;
+            }
+            if let Some(thread_id) = turn.thread_id.clone() {
+                job.thread_id = Some(thread_id);
+            }
+            if let Some(last) = turn.tokens.clone() {
+                let total = job
+                    .tokens
+                    .as_ref()
+                    .and_then(|tokens| tokens.get("total"))
+                    .map(|current| add_token_counts(current, &last))
+                    .unwrap_or_else(|| last.clone());
+                job.tokens = Some(json!({ "total": total, "last": last }));
+            }
+            job.cwd.clone()
+        };
+        if let Ok(diff) = git(&PathBuf::from(&cwd), &["diff", "HEAD"]) {
+            if !diff.trim().is_empty() {
+                let mut inner = guard(&self.inner);
+                if let Some(job) = inner.jobs.get_mut(job_id) {
+                    job.diff = Some(diff);
+                }
+            }
+        }
+        let failed = turn.error.is_some() || !exited_ok;
+        let text = if failed {
+            let reason = turn
+                .error
+                .clone()
+                .or_else(|| (!stderr.is_empty()).then(|| tail(&stderr, REPLY_LIMIT)))
+                .unwrap_or_else(|| "the worker exited with an error".to_string());
+            if turn.text.trim().is_empty() {
+                reason
+            } else {
+                format!("{reason}\n\n{}", tail(turn.text.trim(), REPLY_LIMIT))
+            }
+        } else {
+            tail(turn.text.trim(), REPLY_LIMIT)
+        };
+        self.finish(
+            job_id,
+            if failed { STATUS_FAILED } else { STATUS_DONE },
+            Some(if failed { "failed" } else { "succeeded" }.into()),
+            text,
+            true,
+        );
+        if !failed {
+            self.requeue_waiting(job_id);
         }
     }
 
@@ -3202,8 +3674,8 @@ pub fn tools() -> Value {
                     },
                     "agent": {
                         "type": "string",
-                        "enum": ["codex", "claude"],
-                        "description": "Which CLI runs the worker. Defaults to codex. A Claude worker runs without an approval channel (bypasses permissions) and does not yet report a live diff. Each vendor meters a different set of windows - Codex a 5 hour and a weekly one, Claude those two plus a separate weekly budget for Opus - so how much room one has left says nothing about the other. Do not reason about that from here: every response these tools return carries a fitness block with the current reading and names the side with room in headroom. Read it and prefer that side when one is running out."
+                        "enum": ["codex", "claude", "agy", "opencode"],
+                        "description": "Which CLI runs the worker. Defaults to codex. agy (Antigravity) and opencode run one process per turn and spend neither the Claude nor the Codex allowance, which makes them the cheap choice for reading, summarising and simple edits; they are refused cleanly when not installed. A Claude worker runs without an approval channel (bypasses permissions) and does not yet report a live diff. Each vendor meters a different set of windows - Codex a 5 hour and a weekly one, Claude those two plus a separate weekly budget for Opus - so how much room one has left says nothing about the other. Do not reason about that from here: every response these tools return carries a fitness block with the current reading and names the side with room in headroom. Read it and prefer that side when one is running out."
                     },
                     "cwd": { "type": "string", "description": "Working directory. Defaults to the lead's directory." },
                     "rules": {
@@ -4083,6 +4555,31 @@ fn dispatch_tool(
         "alethe_steer" => {
             let job_id = required_str(arguments, "jobId")?;
             let message = required_str(arguments, "message")?;
+            let one_shot = {
+                let agent = guard(&core.inner).jobs.get(&job_id).map(|job| job.agent.clone());
+                agent.is_some_and(|agent| core.is_one_shot(&agent))
+            };
+            // One process per turn leaves nothing to steer: the correction becomes the next turn.
+            if one_shot {
+                let settled = {
+                    let mut inner = guard(&core.inner);
+                    let job = inner
+                        .jobs
+                        .get_mut(&job_id)
+                        .ok_or_else(|| format!("unknown job {job_id}"))?;
+                    job.inbox.push_back(message);
+                    let settled = job.settled();
+                    core.notify(&inner);
+                    settled
+                };
+                if settled {
+                    core.requeue_waiting(&job_id);
+                }
+                return Ok(json!({
+                    "queued": job_id,
+                    "note": "this worker runs one turn per process; the steer starts as its next turn"
+                }));
+            }
             let mut inner = guard(&core.inner);
             let (agent, thread_id, turn_id) = {
                 let job = inner
@@ -4153,6 +4650,10 @@ fn dispatch_tool(
         "alethe_send" => {
             let job_id = required_str(arguments, "jobId")?;
             let message = required_str(arguments, "message")?;
+            let one_shot = {
+                let agent = guard(&core.inner).jobs.get(&job_id).map(|job| job.agent.clone());
+                agent.is_some_and(|agent| core.is_one_shot(&agent))
+            };
             let mut inner = guard(&core.inner);
             let job = inner
                 .jobs
@@ -4163,8 +4664,9 @@ fn dispatch_tool(
                 .clone()
                 .ok_or_else(|| format!("job {job_id} has no thread"))?;
             // A worker whose process is gone still has its thread on disk, so instead of refusing
-            // the message it is started again and picks up where it left off.
-            if job.stdin.is_none() {
+            // the message it is started again and picks up where it left off. A one-shot worker
+            // never keeps a stdin; while its turn runs the message waits for the next one.
+            if job.stdin.is_none() && !(one_shot && !job.settled()) {
                 drop(inner);
                 let queued = {
                     let mut inner = guard(&core.inner);

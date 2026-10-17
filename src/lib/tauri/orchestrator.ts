@@ -189,6 +189,11 @@ export async function orchestratorApplySettings(settings: OrchestrationSettings)
   return invoke<void>('orchestrator_apply_settings', { settings })
 }
 
+/** Hands OpenCode workers the local 9router key; null removes it. */
+export async function orchestratorSetRouter9Key(key: string | null): Promise<void> {
+  return invoke<void>('orchestrator_set_router9_key', { key })
+}
+
 /** A model the installed Codex offers, with the efforts it accepts. */
 export type CodexModelOption = {
   model: string

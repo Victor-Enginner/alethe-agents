@@ -17,6 +17,7 @@ export const MAX_CONCURRENT_LIMITS = { min: 1, max: 16 } as const
 
 /** What `claude --effort` takes (Claude Code 2.1.285). */
 export const CLAUDE_EFFORTS = ['low', 'medium', 'high', 'xhigh', 'max'] as const
+export const ROLE_AGENTS: readonly unknown[] = ['codex', 'claude', 'agy', 'opencode']
 
 /**
  * The efforts every model Codex 0.159 lists accepts, offered when Codex could not be asked for
@@ -86,12 +87,12 @@ export function isValidRole(role: unknown): role is OrchestrationRole {
     unknown
   >
   if (typeof name !== 'string' || !isOrchestrationName(name)) return false
-  if (agent !== 'codex' && agent !== 'claude') return false
+  if (!ROLE_AGENTS.includes(agent)) return false
   if (!optionalName(model) || !optionalName(effort) || typeof readOnly !== 'boolean') return false
   if (timeoutSeconds !== null && !wholeSeconds(timeoutSeconds)) return false
   if (!ORCHESTRATORS.includes(orchestrator)) return false
   // The headless Claude launch bypasses permissions and has no read-only mode.
-  return agent === 'codex' || !readOnly
+  return agent !== 'claude' || !readOnly
 }
 
 /**

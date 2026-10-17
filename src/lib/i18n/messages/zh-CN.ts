@@ -828,7 +828,7 @@ export const zhCN: Record<MessageKey, string> = {
   'prefs.orchestrationModelsLoading': '正在读取 Codex 提供的模型…',
   'prefs.orchestrationModelsFailed': '无法列出 Codex 模型（{error}）。你仍然可以输入模型名称。',
   'prefs.orchestrationCustomModel': '使用“{value}”',
-  'prefs.orchestrationCodexOnly': '仅限 Codex 工作者',
+  'prefs.orchestrationCodexOnly': 'Claude 工作者不可用',
   'prefs.orchestrationRouting': '路由',
   'prefs.orchestrationRoutingDesc': '当规划器把选择权交给 Alethe 时，委派的调用以哪个角色运行。',
   'prefs.orchestrationRoutingIntro':
@@ -2465,8 +2465,6 @@ export const zhCN: Record<MessageKey, string> = {
   'hud.total': '总计',
   'hud.tokens': '令牌',
   'hud.noCost': '无价格',
-  'hud.empty': '没有运行中的代理',
-  'hud.collapse': '崩溃',
   'context.badge': '{tokens} 上下文',
   'context.badgeTitle': '上一轮上下文：{tokens} 个 token',
   'context.highTitle': '上下文过高：请从 {file} 打开新会话',
@@ -2479,6 +2477,8 @@ export const zhCN: Record<MessageKey, string> = {
   'context.resumePaneName': '{agent} · 恢复',
   'context.resumeTimeout': '恢复文件没有变化；仍然打开新会话。',
   'context.resumeFailed': '无法启动恢复会话',
+  'hud.empty': '没有运行中的代理',
+  'hud.collapse': '崩溃',
   'hud.expand': '展开支出面板',
   'hud.agentsRunning': '{count} 个代理',
   /* ---- crash watch ---- */

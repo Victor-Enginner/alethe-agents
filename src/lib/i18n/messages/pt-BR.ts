@@ -936,7 +936,7 @@ export const ptBR: Record<MessageKey, string> = {
   'prefs.orchestrationModelsFailed':
     'Não foi possível listar os modelos do Codex ({error}). Você ainda pode digitar o nome de um modelo.',
   'prefs.orchestrationCustomModel': 'Usar "{value}"',
-  'prefs.orchestrationCodexOnly': 'Só para workers Codex',
+  'prefs.orchestrationCodexOnly': 'Indisponível para workers Claude',
   'prefs.orchestrationRouting': 'Roteamento',
   'prefs.orchestrationRoutingDesc':
     'Com qual papel uma chamada delegada roda quando o planner deixa a escolha para o Alethe.',
@@ -2795,9 +2795,6 @@ export const ptBR: Record<MessageKey, string> = {
   'hud.total': 'Total',
   'hud.tokens': 'tokens',
   'hud.noCost': 'sem preço',
-  'hud.empty': 'Nenhum agente rodando',
-  'hud.collapse': 'Recolher',
-  'hud.expand': 'Abrir painel de gasto',
   'context.badge': '{tokens} ctx',
   'context.badgeTitle': 'Contexto do último turno: {tokens} tokens',
   'context.highTitle': 'Contexto alto: abra uma sessão nova a partir do {file}',
@@ -2810,6 +2807,9 @@ export const ptBR: Record<MessageKey, string> = {
   'context.resumePaneName': '{agent} · retomada',
   'context.resumeTimeout': 'O arquivo de retomada não mudou; abrindo a sessão nova assim mesmo.',
   'context.resumeFailed': 'Não foi possível abrir a sessão de retomada',
+  'hud.empty': 'Nenhum agente rodando',
+  'hud.collapse': 'Recolher',
+  'hud.expand': 'Abrir painel de gasto',
   'hud.agentsRunning': '{count} agentes',
 
   /* ---- crash watch ---- */

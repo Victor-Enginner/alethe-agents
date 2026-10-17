@@ -1223,6 +1223,7 @@ fn silent_launcher() -> Launcher {
     #[cfg(not(windows))]
     let (program, args): (&str, Vec<String>) = ("sleep", vec!["60".into()]);
     Launcher {
+        one_shot: None,
         kind: "codex".into(),
         program: PathBuf::from(program),
         args,
@@ -1249,6 +1250,7 @@ fn fake_claude_launcher(dir: &std::path::Path, transcript: &str) -> Launcher {
     let (program, args): (&str, Vec<String>) =
         ("sh", vec!["-c".into(), format!("cat '{}'", path.display())]);
     Launcher {
+        one_shot: None,
         kind: "claude".into(),
         program: PathBuf::from(program),
         args,
@@ -1563,6 +1565,7 @@ ping -n 60 127.0.0.1 >NUL
         ],
     );
     Launcher {
+        one_shot: None,
         kind: "claude".into(),
         program: PathBuf::from(program),
         args,
@@ -1792,6 +1795,7 @@ ping -n 60 127.0.0.1 >NUL
         vec!["-c".into(), format!("cat '{}'; sleep 60", path.display())],
     );
     Launcher {
+        one_shot: None,
         kind: "claude".into(),
         program: PathBuf::from(program),
         args,
@@ -3047,6 +3051,7 @@ fn a_codex_thread_that_fails_to_open_fails_its_worker() {
         "\n",
     );
     core.set_launcher(Launcher {
+        one_shot: None,
         kind: "codex".into(),
         ..fake_claude_holding_launcher(&dir, transcript)
     });
@@ -3109,6 +3114,7 @@ fn fake_codex_model_launcher(dir: &std::path::Path, reply: &str) -> Launcher {
         ],
     );
     Launcher {
+        one_shot: None,
         kind: "codex".into(),
         program: PathBuf::from(program),
         args,
@@ -3135,4 +3141,309 @@ fn the_codex_model_list_is_reused_instead_of_asked_again() {
     assert_eq!(first[0]["model"], "m1", "{first}");
     let runs = std::fs::read_to_string(dir.join("runs")).unwrap_or_default();
     assert_eq!(runs.lines().count(), 1, "codex was started {runs:?}");
+}
+
+const FAKE_ONE_SHOT_CLI: &str = r#"
+const fs = require('fs'), path = require('path');
+const args = process.argv.slice(2);
+let input = '';
+const out = (value) => console.log(JSON.stringify(value));
+const done = () => {
+  fs.appendFileSync(process.env.FAKE_LOG, JSON.stringify({ args, input }) + '\n');
+  const pointer = args.find((arg) => arg.startsWith('-p='));
+  if (pointer) {
+    const file = pointer.match(/file (\S+) \(/)[1];
+    const task = fs.readFileSync(path.join(process.cwd(), file), 'utf8');
+    out({ conversation_id: 'conv-1', status: 'SUCCESS', response: task + ' [AGY]',
+      usage: { input_tokens: 4, output_tokens: 2, cache_read_tokens: 1 } });
+    return;
+  }
+  if (process.env.FAKE_FAIL) {
+    out({ type: 'error', sessionID: 'ses_fake', error: { name: 'X', data: { message: 'model not found' } } });
+    process.exit(1);
+  }
+  const resumed = args.includes('--session');
+  out({ type: 'text', sessionID: 'ses_fake', part: { type: 'text', text: input.trim() + (resumed ? ' [SECOND]' : ' [FIRST]') } });
+  out({ type: 'step_finish', sessionID: 'ses_fake', part: { tokens: { input: 10, output: 3, reasoning: 0, cache: { read: 5, write: 0 } } } });
+};
+if (args.some((arg) => arg.startsWith('-p='))) done();
+else { process.stdin.on('data', (d) => (input += d)); process.stdin.on('end', done); }
+"#;
+
+/// A one-shot launcher whose CLI is the Node script above, recording each call in `calls.log`.
+fn fake_one_shot(dir: &std::path::Path, base: Launcher, fail: bool) -> Launcher {
+    let script = dir.join("fake-cli.js");
+    std::fs::write(&script, FAKE_ONE_SHOT_CLI).expect("write fake cli");
+    let mut launcher = base;
+    let mut args = vec![script.to_string_lossy().into_owned()];
+    args.extend(launcher.args.drain(..));
+    launcher.args = args;
+    launcher.env.push((
+        "FAKE_LOG".into(),
+        dir.join("calls.log").to_string_lossy().into_owned(),
+    ));
+    if fail {
+        launcher.env.push(("FAKE_FAIL".into(), "1".into()));
+    }
+    launcher
+}
+
+fn fake_calls(dir: &std::path::Path) -> Vec<Value> {
+    std::fs::read_to_string(dir.join("calls.log"))
+        .unwrap_or_default()
+        .lines()
+        .map(|line| serde_json::from_str(line).expect("call json"))
+        .collect()
+}
+
+fn wait_for_status(core: &Core, job_id: &str, wanted: &str) {
+    for _ in 0..200 {
+        if job_field(core, job_id, "status") == wanted {
+            return;
+        }
+        thread::sleep(Duration::from_millis(50));
+    }
+    panic!("{job_id} never reached {wanted}: {}", core.snapshot());
+}
+
+fn args_of(call: &Value) -> Vec<String> {
+    call["args"]
+        .as_array()
+        .expect("args")
+        .iter()
+        .map(|arg| arg.as_str().unwrap_or_default().to_string())
+        .collect()
+}
+
+#[test]
+fn an_opencode_worker_runs_one_process_per_turn_and_resumes_its_session() {
+    let dir = workspace("one-shot-opencode");
+    let core = Core::default();
+    core.set_launcher(fake_one_shot(
+        &dir,
+        Launcher::opencode_one_shot(PathBuf::from("node")),
+        false,
+    ));
+
+    let created = call(
+        &core,
+        "alethe_delegate",
+        json!({
+            "tasks": ["summarise the readme"],
+            "cwd": dir.to_string_lossy(),
+            "agent": "opencode",
+            "model": "9router/alethe-rapido",
+            "readOnly": true
+        }),
+    );
+    let id = created["jobs"][0]["id"]
+        .as_str()
+        .expect("job id")
+        .to_string();
+    wait_for_status(&core, &id, "done");
+    assert_eq!(job_field(&core, &id, "threadId"), "ses_fake");
+    let summary = job_field(&core, &id, "summary");
+    let summary = summary.as_str().expect("summary");
+    assert!(summary.ends_with("[FIRST]"), "{summary}");
+    assert!(summary.contains("summarise the readme"), "{summary}");
+    assert_eq!(job_field(&core, &id, "tokens")["total"]["totalTokens"], 18);
+
+    let first = args_of(&fake_calls(&dir)[0]);
+    assert!(
+        first
+            .windows(2)
+            .any(|w| w == ["-m", "9router/alethe-rapido"]),
+        "{first:?}"
+    );
+    assert!(
+        first.windows(2).any(|w| w == ["--agent", "plan"]),
+        "{first:?}"
+    );
+    assert!(
+        !first.contains(&"--auto".to_string()),
+        "read-only must not auto-approve: {first:?}"
+    );
+
+    let sent = call(
+        &core,
+        "alethe_send",
+        json!({ "jobId": id, "message": "now the tests" }),
+    );
+    assert_eq!(sent["revived"], json!(id), "{sent}");
+    wait_for_status(&core, &id, "done");
+    let calls = fake_calls(&dir);
+    assert_eq!(calls.len(), 2);
+    let second = args_of(&calls[1]);
+    assert!(
+        second.windows(2).any(|w| w == ["--session", "ses_fake"]),
+        "{second:?}"
+    );
+    let input = calls[1]["input"].as_str().expect("input");
+    assert!(
+        input.ends_with("now the tests"),
+        "the follow-up is the turn: {input}"
+    );
+    let summary = job_field(&core, &id, "summary");
+    assert!(
+        summary
+            .as_str()
+            .expect("summary")
+            .ends_with("now the tests [SECOND]"),
+        "{summary}"
+    );
+    assert_eq!(job_field(&core, &id, "tokens")["total"]["totalTokens"], 36);
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn an_agy_worker_reads_its_task_from_a_file_that_is_removed_afterwards() {
+    let dir = workspace("one-shot-agy");
+    let core = Core::default();
+    core.set_launcher(fake_one_shot(
+        &dir,
+        Launcher::agy_one_shot(PathBuf::from("node")),
+        false,
+    ));
+
+    let created = call(
+        &core,
+        "alethe_delegate",
+        json!({ "tasks": ["list the TODOs"], "cwd": dir.to_string_lossy(), "agent": "agy" }),
+    );
+    let id = created["jobs"][0]["id"]
+        .as_str()
+        .expect("job id")
+        .to_string();
+    wait_for_status(&core, &id, "done");
+    let summary = job_field(&core, &id, "summary");
+    let summary = summary.as_str().expect("summary");
+    assert!(summary.ends_with("[AGY]"), "{summary}");
+    assert!(summary.contains("list the TODOs"), "{summary}");
+    assert_eq!(job_field(&core, &id, "threadId"), "conv-1");
+
+    let args = args_of(&fake_calls(&dir)[0]);
+    assert!(
+        args.windows(2).any(|w| w == ["--mode", "accept-edits"]),
+        "{args:?}"
+    );
+    assert!(
+        !args.iter().any(|arg| arg.contains("list the TODOs")),
+        "the task stays out of argv"
+    );
+    let tasks = dir.join(".alethe").join("tasks");
+    let left = std::fs::read_dir(&tasks)
+        .map(|entries| entries.count())
+        .unwrap_or(0);
+    assert_eq!(left, 0, "the task file is removed once the turn ends");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+#[test]
+fn a_one_shot_worker_that_reports_an_error_fails_with_its_message() {
+    let dir = workspace("one-shot-error");
+    let core = Core::default();
+    core.set_launcher(fake_one_shot(
+        &dir,
+        Launcher::opencode_one_shot(PathBuf::from("node")),
+        true,
+    ));
+
+    let created = call(
+        &core,
+        "alethe_delegate",
+        json!({ "tasks": ["anything"], "cwd": dir.to_string_lossy(), "agent": "opencode" }),
+    );
+    let id = created["jobs"][0]["id"]
+        .as_str()
+        .expect("job id")
+        .to_string();
+    wait_for_status(&core, &id, "failed");
+    let summary = job_field(&core, &id, "summary");
+    assert!(
+        summary
+            .as_str()
+            .expect("summary")
+            .contains("model not found"),
+        "{summary}"
+    );
+    assert_eq!(core.snapshot()["running"], 0, "the slot is given back");
+
+    let _ = std::fs::remove_dir_all(&dir);
+}
+
+fn real_cli(name: &str) -> PathBuf {
+    let output = Command::new("where").arg(name).output().expect("where");
+    let text = String::from_utf8_lossy(&output.stdout).to_string();
+    let lines: Vec<&str> = text
+        .lines()
+        .map(str::trim)
+        .filter(|l| !l.is_empty())
+        .collect();
+    let pick = lines
+        .iter()
+        .find(|line| {
+            let lower = line.to_ascii_lowercase();
+            lower.ends_with(".cmd") || lower.ends_with(".exe")
+        })
+        .or(lines.first())
+        .unwrap_or_else(|| panic!("{name} on PATH"));
+    PathBuf::from(pick)
+}
+
+/// Real CLIs, real (free) models: `cargo test --test orchestrator real_one_shot -- --ignored`.
+#[test]
+#[ignore]
+fn real_one_shot_workers_answer_through_the_orchestrator() {
+    for (agent, launcher, model) in [
+        (
+            "opencode",
+            Launcher::opencode_one_shot(real_cli("opencode")),
+            Some("opencode/deepseek-v4.1-flash-free"),
+        ),
+        ("agy", Launcher::agy_one_shot(real_cli("agy")), None),
+    ] {
+        let dir = workspace(&format!("real-{agent}"));
+        let core = Core::default();
+        core.set_launcher(launcher);
+        let mut arguments = json!({
+            "tasks": ["Reply with exactly the word PONG and nothing else. Do not use any tool."],
+            "cwd": dir.to_string_lossy(),
+            "agent": agent,
+            "readOnly": true,
+        });
+        if let Some(model) = model {
+            arguments["model"] = json!(model);
+        }
+        let created = call(&core, "alethe_delegate", arguments);
+        let id = created["jobs"][0]["id"]
+            .as_str()
+            .expect("job id")
+            .to_string();
+        for _ in 0..1200 {
+            let status = job_field(&core, &id, "status");
+            if status == "done" || status == "failed" {
+                break;
+            }
+            thread::sleep(Duration::from_millis(100));
+        }
+        let summary = job_field(&core, &id, "summary");
+        println!(
+            "{agent}: status={} thread={} summary={summary} tokens={}",
+            job_field(&core, &id, "status"),
+            job_field(&core, &id, "threadId"),
+            job_field(&core, &id, "tokens")
+        );
+        assert_eq!(
+            job_field(&core, &id, "status"),
+            "done",
+            "{agent}: {summary}"
+        );
+        assert!(
+            summary.as_str().unwrap_or_default().contains("PONG"),
+            "{agent}: {summary}"
+        );
+        let _ = std::fs::remove_dir_all(&dir);
+    }
 }

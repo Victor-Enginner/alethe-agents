@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  isValidRole,
   normalizeOrchestrationSettings,
   normalizeRoutingSettings,
 } from './orchestrationSettings'
@@ -67,5 +68,13 @@ describe('normalizeOrchestrationSettings', () => {
     expect(result.routing.preset).toBe('performance')
     expect(result.routing.rules).toEqual([validRule])
     expect(result.routing.criticalThreshold).toBe(90)
+  })
+
+  it('keeps one-shot worker roles, read-only included, and still refuses a read-only Claude', () => {
+    const role = { model: null, effort: null, timeoutSeconds: null }
+    expect(isValidRole({ ...role, name: 'cheap', agent: 'opencode', readOnly: true })).toBe(true)
+    expect(isValidRole({ ...role, name: 'reader', agent: 'agy', readOnly: true })).toBe(true)
+    expect(isValidRole({ ...role, name: 'x', agent: 'claude', readOnly: true })).toBe(false)
+    expect(isValidRole({ ...role, name: 'x', agent: 'freebuff', readOnly: false })).toBe(false)
   })
 })

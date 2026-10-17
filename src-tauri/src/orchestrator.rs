@@ -59,6 +59,13 @@ fn prepare(app: &AppHandle, state: &OrchestratorState) {
     if let Some(program) = cli_resolver::find_windows_cli_launcher("claude") {
         core.set_launcher(Launcher::claude_headless(PathBuf::from(program)));
     }
+    // One process per turn; they spend neither the Claude nor the Codex allowance.
+    if let Some(program) = cli_resolver::find_windows_cli_launcher("agy") {
+        core.set_launcher(Launcher::agy_one_shot(PathBuf::from(program)));
+    }
+    if let Some(program) = cli_resolver::find_windows_cli_launcher("opencode") {
+        core.set_launcher(Launcher::opencode_one_shot(PathBuf::from(program)));
+    }
     core.set_shell_host(Arc::new(crate::orchestrator_shell_host::PtyShellHost::new(
         app.clone(),
     )));
@@ -228,6 +235,22 @@ pub fn orchestrator_apply_settings(
     Ok(())
 }
 
+/// The local 9router key, handed to OpenCode workers as `OPENAI_API_KEY` (the variable its
+/// `9router` provider reads) so a role can run on a 9router combo. `None` removes it. The key only
+/// lives in the worker's environment; it is not written anywhere.
+#[tauri::command]
+pub fn orchestrator_set_router9_key(
+    app: AppHandle,
+    state: tauri::State<'_, OrchestratorState>,
+    key: Option<String>,
+) -> Result<(), String> {
+    prepare(&app, &state);
+    state
+        .core
+        .set_launcher_env("opencode", "OPENAI_API_KEY", key);
+    Ok(())
+}
+
 /// The Codex models and efforts the Orchestration settings offer for a role.
 #[tauri::command]
 pub async fn orchestrator_codex_models(
@@ -307,7 +330,10 @@ pub fn orchestrator_job_diff(
 
 /// Interrupts a running worker and settles it as cancelled — the same path `alethe_cancel` takes.
 #[tauri::command]
-pub fn orchestrator_cancel_job(state: tauri::State<'_, OrchestratorState>, job_id: String) -> Value {
+pub fn orchestrator_cancel_job(
+    state: tauri::State<'_, OrchestratorState>,
+    job_id: String,
+) -> Value {
     json!({ "cancelled": state.core.cancel_jobs(&[job_id]) })
 }
 
