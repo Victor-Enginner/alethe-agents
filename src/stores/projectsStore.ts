@@ -3,6 +3,7 @@ import { create } from 'zustand'
 
 import { customAgentIconComponent } from '../components/icons/customAgentIcons'
 import { syncCustomAgentProviders } from '../lib/agentProviders'
+import { collectOversizedIcons, replaceIcons, shrinkImageDataUrl } from '../lib/iconCompaction'
 import { DEFAULT_GRID_ID, normalizeProjectGrids, selectProjectGrid } from '../lib/projectGrids'
 import { setStorageNamespace } from '../lib/storageNamespace'
 import {
@@ -414,6 +415,18 @@ function scheduleSave(getState: () => ProjectsState) {
 export const useProjectsStore = create<ProjectsState>((set, get) => {
   let suppressNavigationSync = false
 
+  // Multi-megabyte icon data URLs (copied into every tab) made each debounced
+  // save stringify and write tens of MB. Shrink them once after loading.
+  const compactOversizedIcons = async () => {
+    const oversized = collectOversizedIcons(get())
+    if (oversized.size === 0) return
+    const replacements = new Map<string, string>()
+    for (const url of oversized) replacements.set(url, await shrinkImageDataUrl(url))
+    set((state) => replaceIcons(state, replacements))
+    scheduleSave(get)
+    void recordAppEvent('projects.icons', `compacted=${oversized.size}`)
+  }
+
   const update = (mutator: (state: ProjectsState) => Partial<ProjectsState> | void) => {
     let changed = false
     set((state) => {
@@ -771,6 +784,7 @@ export const useProjectsStore = create<ProjectsState>((set, get) => {
           activeProfileId: profileState.active_profile_id,
           profiles: profileState.profiles,
         })
+        void compactOversizedIcons()
         syncCustomAgentProviders(migrated.preferences.customAgents, (definition) =>
           customAgentIconComponent(definition.iconSpec ?? definition.icon ?? 'bot'),
         )

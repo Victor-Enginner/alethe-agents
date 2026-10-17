@@ -3,9 +3,11 @@
 // get_session_cost(agent, cwd, session_id) periodicamente pro Token HUD.
 
 use serde::Serialize;
+use std::collections::HashMap;
 use std::fs;
-use std::io::{BufRead, BufReader};
+use std::io::{BufRead, BufReader, Seek, SeekFrom};
 use std::path::PathBuf;
+use std::sync::{Mutex, OnceLock};
 
 /// Anthropic. Validado via skill claude-api (tabela de modelos atual).
 struct Pricing {
@@ -110,6 +112,9 @@ pub struct SessionCost {
     /// Modelo dominante (mais output) — pro HUD mostrar um label.
     pub model: Option<String>,
     pub by_model: Vec<ModelCost>,
+    /// Prompt size of the latest turn (input + cache read + cache write), i.e.
+    /// how full the context window is right now. `None` when unknown.
+    pub context_tokens: Option<u64>,
 }
 
 impl ModelCost {
@@ -128,97 +133,201 @@ impl ModelCost {
     }
 }
 
-/// agrupando por message.model.
-fn parse_claude_cost(path: &PathBuf) -> std::collections::HashMap<String, ModelCost> {
-    let mut by_model: std::collections::HashMap<String, ModelCost> =
-        std::collections::HashMap::new();
-    let Ok(file) = fs::File::open(path) else {
-        return by_model;
-    };
-    for line in BufReader::new(file).lines().map_while(Result::ok) {
-        if line.is_empty() {
-            continue;
+const TRANSCRIPT_CACHE_MAX_ENTRIES: usize = 64;
+
+#[derive(Default, Clone)]
+struct ClaudeTally {
+    by_model: HashMap<String, ModelCost>,
+    context_tokens: Option<u64>,
+}
+
+#[derive(Default, Clone)]
+struct CodexTally {
+    cost: ModelCost,
+    context_tokens: Option<u64>,
+}
+
+/// Transcripts are append-only JSONL that reach tens of MB, and the HUD polls
+/// them every few seconds. Each entry remembers how far the file was parsed so
+/// a poll only reads the bytes appended since the previous one.
+type TranscriptCache<T> = Mutex<HashMap<PathBuf, (u64, T)>>;
+
+fn claude_cache() -> &'static TranscriptCache<ClaudeTally> {
+    static CACHE: OnceLock<TranscriptCache<ClaudeTally>> = OnceLock::new();
+    CACHE.get_or_init(Default::default)
+}
+
+fn codex_cache() -> &'static TranscriptCache<CodexTally> {
+    static CACHE: OnceLock<TranscriptCache<CodexTally>> = OnceLock::new();
+    CACHE.get_or_init(Default::default)
+}
+
+/// Feeds every complete line after `offset` to `on_line` and returns the new
+/// offset. A trailing line without `\n` is still being written and is left for
+/// the next call. `None` when the file shrank (rewritten), so the caller resets.
+fn read_appended_lines(path: &PathBuf, offset: u64, mut on_line: impl FnMut(&str)) -> Option<u64> {
+    let mut file = fs::File::open(path).ok()?;
+    let len = file.metadata().ok()?.len();
+    if len < offset {
+        return None;
+    }
+    if len == offset {
+        return Some(offset);
+    }
+    file.seek(SeekFrom::Start(offset)).ok()?;
+    let mut reader = BufReader::new(file);
+    let mut consumed = offset;
+    let mut buf = Vec::new();
+    loop {
+        buf.clear();
+        let Ok(read) = reader.read_until(b'\n', &mut buf) else {
+            break;
+        };
+        if read == 0 || buf.last() != Some(&b'\n') {
+            break;
         }
-        let Ok(value) = serde_json::from_str::<serde_json::Value>(&line) else {
-            continue;
-        };
-        let Some(message) = value.get("message") else {
-            continue;
-        };
-        let Some(usage) = message.get("usage") else {
-            continue;
-        };
-        let model = message
-            .get("model")
-            .and_then(|v| v.as_str())
-            .unwrap_or("unknown")
-            .to_string();
-        let entry = by_model.entry(model.clone()).or_insert_with(|| ModelCost {
+        consumed += read as u64;
+        let line = String::from_utf8_lossy(&buf);
+        let line = line.trim_end();
+        if !line.is_empty() {
+            on_line(line);
+        }
+    }
+    Some(consumed)
+}
+
+fn incremental_parse<T: Default + Clone>(
+    cache: &TranscriptCache<T>,
+    path: &PathBuf,
+    apply: impl Fn(&mut T, &str),
+) -> T {
+    let mut cache = cache
+        .lock()
+        .unwrap_or_else(|poisoned| poisoned.into_inner());
+    let (offset, mut tally) = cache.remove(path).unwrap_or_default();
+    let next = match read_appended_lines(path, offset, |line| apply(&mut tally, line)) {
+        Some(next) => next,
+        None => {
+            tally = T::default();
+            read_appended_lines(path, 0, |line| apply(&mut tally, line)).unwrap_or(0)
+        }
+    };
+    if cache.len() >= TRANSCRIPT_CACHE_MAX_ENTRIES {
+        cache.clear();
+    }
+    cache.insert(path.clone(), (next, tally.clone()));
+    tally
+}
+
+/// Sums Claude transcript tokens grouped by message.model.
+fn tally_claude_line(tally: &mut ClaudeTally, line: &str) {
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(line) else {
+        return;
+    };
+    let Some(message) = value.get("message") else {
+        return;
+    };
+    let Some(usage) = message.get("usage") else {
+        return;
+    };
+    let model = message
+        .get("model")
+        .and_then(|v| v.as_str())
+        .unwrap_or("unknown")
+        .to_string();
+    let entry = tally
+        .by_model
+        .entry(model.clone())
+        .or_insert_with(|| ModelCost {
             model,
             ..Default::default()
         });
-        let u = |k: &str| usage.get(k).and_then(|v| v.as_u64()).unwrap_or(0);
-        entry.input += u("input_tokens");
-        entry.output += u("output_tokens");
-        entry.cache_read += u("cache_read_input_tokens");
-        // Breakdown 5m/1h vem em cache_creation; fallback p/ cache_creation_input_tokens como 5m.
-        let cc = usage.get("cache_creation");
-        let cc5 = cc
-            .and_then(|c| c.get("ephemeral_5m_input_tokens"))
-            .and_then(|v| v.as_u64());
-        let cc1 = cc
-            .and_then(|c| c.get("ephemeral_1h_input_tokens"))
-            .and_then(|v| v.as_u64());
-        match (cc5, cc1) {
-            (Some(a), Some(b)) => {
-                entry.cache_write_5m += a;
-                entry.cache_write_1h += b;
-            }
-            _ => {
-                entry.cache_write_5m += u("cache_creation_input_tokens");
-            }
+    let u = |k: &str| usage.get(k).and_then(|v| v.as_u64()).unwrap_or(0);
+    entry.input += u("input_tokens");
+    entry.output += u("output_tokens");
+    entry.cache_read += u("cache_read_input_tokens");
+    // The 5m/1h breakdown lives in cache_creation; fall back to cache_creation_input_tokens as 5m.
+    let cc = usage.get("cache_creation");
+    let cc5 = cc
+        .and_then(|c| c.get("ephemeral_5m_input_tokens"))
+        .and_then(|v| v.as_u64());
+    let cc1 = cc
+        .and_then(|c| c.get("ephemeral_1h_input_tokens"))
+        .and_then(|v| v.as_u64());
+    match (cc5, cc1) {
+        (Some(a), Some(b)) => {
+            entry.cache_write_5m += a;
+            entry.cache_write_1h += b;
+        }
+        _ => {
+            entry.cache_write_5m += u("cache_creation_input_tokens");
         }
     }
-    by_model
+    let sidechain = value.get("isSidechain").and_then(|v| v.as_bool()) == Some(true);
+    if !sidechain {
+        tally.context_tokens = Some(
+            u("input_tokens") + u("cache_read_input_tokens") + u("cache_creation_input_tokens"),
+        );
+    }
 }
 
-fn parse_codex_cost(path: &PathBuf) -> ModelCost {
-    let mut cost = ModelCost {
-        model: "codex".to_string(),
-        ..Default::default()
-    };
-    let Ok(file) = fs::File::open(path) else {
-        return cost;
-    };
-    for line in BufReader::new(file).lines().map_while(Result::ok) {
-        if line.is_empty() {
-            continue;
-        }
-        let Ok(value) = serde_json::from_str::<serde_json::Value>(&line) else {
-            continue;
-        };
-        let payload = value.get("payload");
-        let is_token_count =
-            payload.and_then(|p| p.get("type")).and_then(|v| v.as_str()) == Some("token_count");
-        if !is_token_count {
-            continue;
-        }
-        let Some(total) = payload
-            .and_then(|p| p.get("info"))
-            .and_then(|i| i.get("total_token_usage"))
-        else {
-            continue;
-        };
-        let u = |k: &str| total.get(k).and_then(|v| v.as_u64()).unwrap_or(0);
+fn parse_claude_cost(path: &PathBuf) -> ClaudeTally {
+    incremental_parse(claude_cache(), path, tally_claude_line)
+}
 
-        cost.input = u("input_tokens");
-        cost.output = u("output_tokens");
-        cost.cache_read = u("cached_input_tokens");
+fn tally_codex_line(tally: &mut CodexTally, line: &str) {
+    let Ok(value) = serde_json::from_str::<serde_json::Value>(line) else {
+        return;
+    };
+    let payload = value.get("payload");
+    let is_token_count =
+        payload.and_then(|p| p.get("type")).and_then(|v| v.as_str()) == Some("token_count");
+    if !is_token_count {
+        return;
     }
-    cost
+    let info = payload.and_then(|p| p.get("info"));
+    let Some(total) = info.and_then(|i| i.get("total_token_usage")) else {
+        return;
+    };
+    let u = |k: &str| total.get(k).and_then(|v| v.as_u64()).unwrap_or(0);
+    tally.cost.input = u("input_tokens");
+    tally.cost.output = u("output_tokens");
+    tally.cost.cache_read = u("cached_input_tokens");
+    // Codex counts cached tokens inside input_tokens, so the last turn's input is the context.
+    if let Some(last) = info
+        .and_then(|i| i.get("last_token_usage"))
+        .and_then(|l| l.get("input_tokens"))
+        .and_then(|v| v.as_u64())
+    {
+        tally.context_tokens = Some(last);
+    }
+}
+
+fn parse_codex_cost(path: &PathBuf) -> CodexTally {
+    let mut tally = incremental_parse(codex_cache(), path, tally_codex_line);
+    tally.cost.model = "codex".to_string();
+    tally
 }
 
 fn find_codex_session_path(session_id: &str) -> Option<PathBuf> {
+    // Scanning every Codex session file on each HUD poll is expensive; ids never move.
+    static PATHS: OnceLock<Mutex<HashMap<String, PathBuf>>> = OnceLock::new();
+    let paths = PATHS.get_or_init(Default::default);
+    let known = paths
+        .lock()
+        .ok()
+        .and_then(|map| map.get(session_id).cloned());
+    if let Some(known) = known.filter(|path| path.is_file()) {
+        return Some(known);
+    }
+    let found = scan_codex_session_path(session_id)?;
+    if let Ok(mut map) = paths.lock() {
+        map.insert(session_id.to_string(), found.clone());
+    }
+    Some(found)
+}
+
+fn scan_codex_session_path(session_id: &str) -> Option<PathBuf> {
     let root = crate::codex_sessions::codex_sessions_dir()?;
     if !root.is_dir() {
         return None;
@@ -251,12 +360,15 @@ fn get_session_cost_inner(
     cwd: String,
     session_id: String,
 ) -> Result<SessionCost, String> {
+    let mut context_tokens = None;
     let by_model: Vec<ModelCost> = match agent.as_str() {
         "codex" => {
             let Some(path) = find_codex_session_path(&session_id) else {
                 return Err(format!("sessão codex {session_id} não encontrada"));
             };
-            vec![parse_codex_cost(&path)]
+            let tally = parse_codex_cost(&path);
+            context_tokens = tally.context_tokens;
+            vec![tally.cost]
         }
         "claude" => {
             let dirs = crate::claude_sessions::project_dirs_for_cwd(&cwd)?;
@@ -271,7 +383,9 @@ fn get_session_cost_inner(
             let Some(path) = path else {
                 return Err(format!("sessão claude {session_id} não encontrada"));
             };
-            parse_claude_cost(&path).into_values().collect()
+            let tally = parse_claude_cost(&path);
+            context_tokens = tally.context_tokens;
+            tally.by_model.into_values().collect()
         }
         "opencode" => {
             let db_path = opencode_db_path()
@@ -334,7 +448,9 @@ fn get_session_cost_inner(
         other => return Err(format!("agente sem custo suportado: {other}")),
     };
 
-    Ok(aggregate(agent, session_id, by_model))
+    let mut cost = aggregate(agent, session_id, by_model);
+    cost.context_tokens = context_tokens;
+    Ok(cost)
 }
 
 #[tauri::command]
@@ -353,12 +469,20 @@ fn get_transcript_cost_inner(path: String, agent: Option<String>) -> Result<Sess
         return Err(format!("transcript not found: {path}"));
     }
     let agent = agent.unwrap_or_else(|| "claude".to_string());
-    let by_model: Vec<ModelCost> = match agent.as_str() {
-        "claude" => parse_claude_cost(&pb).into_values().collect(),
-        "codex" => vec![parse_codex_cost(&pb)],
+    let (by_model, context_tokens): (Vec<ModelCost>, Option<u64>) = match agent.as_str() {
+        "claude" => {
+            let tally = parse_claude_cost(&pb);
+            (tally.by_model.into_values().collect(), tally.context_tokens)
+        }
+        "codex" => {
+            let tally = parse_codex_cost(&pb);
+            (vec![tally.cost], tally.context_tokens)
+        }
         other => return Err(format!("unsupported agent transcript cost: {other}")),
     };
-    Ok(aggregate(agent, path, by_model))
+    let mut cost = aggregate(agent, path, by_model);
+    cost.context_tokens = context_tokens;
+    Ok(cost)
 }
 
 /// modelo dominante por output). Compartilhado por get_session_cost e
@@ -575,5 +699,68 @@ mod tests {
         };
         mc.compute_cost();
         assert_eq!(mc.cost_usd, Some(5.0));
+    }
+
+    fn temp_transcript(name: &str) -> PathBuf {
+        let suffix = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos();
+        std::env::temp_dir().join(format!("alethe-{name}-{suffix}.jsonl"))
+    }
+
+    fn claude_line(input: u64, read: u64, write: u64, output: u64) -> String {
+        format!(
+            "{{\"type\":\"assistant\",\"message\":{{\"model\":\"claude-opus-4-8\",\"usage\":{{\"input_tokens\":{input},\"cache_read_input_tokens\":{read},\"cache_creation_input_tokens\":{write},\"output_tokens\":{output}}}}}}}\n"
+        )
+    }
+
+    #[test]
+    fn claude_transcript_is_parsed_incrementally_and_reports_last_turn_context() {
+        use std::io::Write;
+        let path = temp_transcript("claude-incremental");
+        fs::write(&path, claude_line(10, 1_000, 200, 50)).unwrap();
+        assert_eq!(parse_claude_cost(&path).context_tokens, Some(1_210));
+
+        // A half-written line waits for the next poll instead of being lost.
+        let mut file = fs::OpenOptions::new().append(true).open(&path).unwrap();
+        let next = claude_line(5, 150_000, 60_000, 20);
+        let (head, tail) = next.split_at(30);
+        file.write_all(head.as_bytes()).unwrap();
+        assert_eq!(parse_claude_cost(&path).context_tokens, Some(1_210));
+        file.write_all(tail.as_bytes()).unwrap();
+        drop(file);
+
+        let second = parse_claude_cost(&path);
+        assert_eq!(second.context_tokens, Some(210_005));
+        let opus = &second.by_model["claude-opus-4-8"];
+        assert_eq!(
+            (opus.input, opus.output, opus.cache_read),
+            (15, 70, 151_000)
+        );
+
+        // A rewritten (shorter) transcript resets the tally.
+        fs::write(&path, claude_line(1, 2, 3, 4)).unwrap();
+        let reset = parse_claude_cost(&path);
+        assert_eq!(reset.context_tokens, Some(6));
+        assert_eq!(reset.by_model["claude-opus-4-8"].output, 4);
+        let _ = fs::remove_file(&path);
+    }
+
+    #[test]
+    fn codex_context_comes_from_the_last_turn_input() {
+        let path = temp_transcript("codex-context");
+        fs::write(
+            &path,
+            "{\"payload\":{\"type\":\"token_count\",\"info\":{\"total_token_usage\":{\"input_tokens\":900,\"cached_input_tokens\":400,\"output_tokens\":70},\"last_token_usage\":{\"input_tokens\":320000}}}}\n",
+        )
+        .unwrap();
+        let tally = parse_codex_cost(&path);
+        assert_eq!(tally.context_tokens, Some(320_000));
+        assert_eq!(
+            (tally.cost.input, tally.cost.model.as_str()),
+            (900, "codex")
+        );
+        let _ = fs::remove_file(&path);
     }
 }

@@ -2,6 +2,7 @@ import { Upload, X } from 'lucide-react'
 import { useRef } from 'react'
 
 import { useT } from '../../lib/i18n'
+import { shrinkImageDataUrl } from '../../lib/iconCompaction'
 import controls from './controls.module.css'
 
 const MAX_IMAGE_BYTES = 2 * 1024 * 1024
@@ -49,7 +50,7 @@ export function ImageInput({
       reader.onerror = () => reject(reader.error)
       reader.readAsDataURL(file)
     })
-    onChange(dataUrl)
+    onChange(await shrinkImageDataUrl(dataUrl))
   }
 
   const initial = (projectName || 'P').trim().charAt(0).toUpperCase()
