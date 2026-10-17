@@ -12,6 +12,23 @@ Notable user-facing changes to **Alethe** are documented here. The format is bas
 
 ### Added
 
+- **Delegate to Antigravity (`agy`) and OpenCode, not only Claude and Codex.** Orchestration roles
+  can now pick `agy` or `opencode` as the worker, read-only included (agy plan mode, OpenCode's plan
+  agent). Each turn runs as its own process and the conversation resumes on the next one, so cheap
+  work such as reading, summarising and simple edits stops spending the Claude and Codex allowances.
+  An OpenCode role can run on a 9router combo (for example `9router/alethe-rapido`) or on OpenCode's
+  free models; with 9router on, its key reaches the worker only through its environment. Freebuff
+  has no non-interactive mode, so it stays a terminal agent.
+
+- **Each agent terminal now shows how full its context is.** A small badge in the pane header reads
+  the prompt size of the last turn (Claude Code and Codex). It turns yellow from 200k tokens and red
+  from 300k; past the red line a strip offers to have the agent update `RETOMADA.md` and then opens a
+  fresh session of the same agent that starts from it. Both limits live in Preferences → Terminal,
+  with no sound or blinking.
+- **Start any agent from the folder's `RETOMADA.md`.** When the chosen folder has one, the new
+  terminal dialog offers "Start from RETOMADA.md": the agent (Claude, Codex, OpenCode, or a custom
+  CLI) reads it first and continues where the last session stopped.
+
 - **Open the 9router and OmniRoute dashboards from the top bar.** Two buttons next to the 9router pill open each local gateway dashboard in the browser.
 - **Turning on AI Memory now takes you to a working install, and recall actually works.** The switch
   in Preferences → Features grew a panel beneath it: whether ai-memory is there, a button to install
@@ -343,6 +360,22 @@ Notable user-facing changes to **Alethe** are documented here. The format is bas
   context file is created owner-only and never overwrites an existing one.
 
 ### Fixed
+
+- **Alethe no longer stalls on large project icons.** A project or group image picked from disk was
+  stored at full size and copied into every tab, so a few screenshots used as icons grew the saved
+  workspace to 25 MB, rewritten on every change. Icons are now shrunk to 128 px when picked, and
+  existing oversized ones are shrunk once on startup.
+- **Cost and context polling reads only what is new in a transcript.** Agent cost was recomputed by
+  re-reading the whole session transcript every few seconds (up to ~0.75 s of CPU per 55 MB file);
+  it now continues from where the last read stopped, and Codex session files are no longer scanned
+  on every poll.
+- **"View Markdown full screen" no longer opens a blank page.** A Markdown file that could not be
+  read fell back to a web embed with the "some sites block embedding" hint; it now shows that the
+  file could not be read, and the embed hint only appears for websites.
+- **Terminal links to a bare file name find files in a sibling folder.** When an agent prints
+  `NOTES.md` for a file it wrote next to the terminal's folder, the link now resolves to it.
+- **"Open in folder" works when the file is missing.** It opens the closest folder that exists
+  instead of failing.
 
 - **The 9router pill shows a running 9router even when Alethe did not start it.** A 9router launched at Windows logon used to read as off; the status now also counts a copy whose health route answers on the port.
 

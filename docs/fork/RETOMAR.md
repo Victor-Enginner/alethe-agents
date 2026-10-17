@@ -2,6 +2,28 @@
 
 Estado salvo em 15/10/2026. Tudo commitado localmente; nada se perde ao reiniciar.
 
+## 0. Missões de melhoria do Alethe (16/10, noite) — no working tree, SEM commit
+
+Pedido do Victor (prints): CPU/GPU alta, Markdown ampliado em branco, "Abrir na pasta" quebrado,
+Claude não delega para agy/freebuff/OpenCode. Feito, medido e testado:
+
+| # | Missão | Situação | Medida |
+|---|---|---|---|
+| 1 | Errinhos | ok | Markdown inexistente caía num `<iframe>` (tela branca); agora mostra "não foi possível ler". Link `NOME.md` acha o arquivo em pasta irmã (`tools` → `prompts`). "Abrir na pasta" abre a pasta existente mais próxima. Teste de docs apontado para `README.upstream.md`. |
+| 2 | Lag | ok | `projects.json` 25,2 MB → ~0,57 MB estimado: 4 ícones PNG de até 1672×941 copiados 16× (projetos, grupos, abas). Stringify 78 ms → 1,6 ms por salvamento. Transcript de 55 MB relido inteiro a cada 4 s (~750 ms CPU) → leitura incremental. |
+| 3 | Aviso de contexto | ok | Selo "212k ctx" por terminal (Claude/Codex), amarelo ≥200k, vermelho ≥300k com faixa "Contexto alto…" e botão que pede ao agente o `RETOMADA.md` e abre sessão nova. Limites em Preferências → Terminal. |
+| 4 | Workers agy/freebuff/OpenCode | ok (17/10) | `agy` e `opencode` viram workers (um processo por turno, conversa retomada). Teste real: os dois responderam "PONG" pelo orquestrador. Freebuff fica fora (sem modo não interativo). Ver `docs/fork/PROPOSTA-LAUNCHER.md`. |
+| 5 | Retomada estruturada | ok | Novo terminal de agente oferece "Começar pelo RETOMADA.md" quando o arquivo existe na pasta (qualquer CLI; desmarcado por padrão). |
+| 6 | openclaude + OpenRouter | não instalar | Código derivado do Claude Code proprietário, sem autorização (o próprio LICENSE diz); gateway de terceiros por padrão. Ver [D-008](./DECISOES.md#d-008). OpenCode via 9router cobre o papel. |
+
+Testes: vitest 1011 (1 falha real corrigida; timeouts de worker só com a máquina carregada, passam
+com `--maxWorkers=2`), `npm run build` ok, `cargo test --lib` 575 ok + 1 falha ambiental (Tailscale
+instalado; em `A JORNADA/ALERTAS.md`). Rust de teste compila em `O:\data\cargo-target\alethe-test`
+para não travar o `tauri dev`.
+
+Falta: ver no app aberto (o Alethe estava fechado; não foi aberto por regra) — conferir o selo, a
+faixa vermelha e o tamanho do `projects.json` depois de abrir. OpenCode ainda sem número de contexto.
+
 ## 1. Religar (nesta ordem)
 
 1. **Abrir o ALETHE**: dois cliques no atalho **ALETHE** da área de trabalho.
@@ -43,7 +65,7 @@ Teste: **novo terminal** → escolher o agente → fazer login na primeira vez (
 | Tarefas, sprints, placar e lacunas | [TAREFAS.md](./TAREFAS.md) |
 | Provedores, 9router, combos, agentes | [PROVEDORES.md](./PROVEDORES.md) |
 | Arquitetura (incluindo Hermes e OpenClaw) | [ARQUITETURA.md](./ARQUITETURA.md) |
-| Decisões (D-001 a D-005) | [DECISOES.md](./DECISOES.md) |
+| Decisões (D-001 a D-008) | [DECISOES.md](./DECISOES.md) |
 | Diário | [DIARIO.md](./DIARIO.md) |
 | Segurança do 9router | [seguranca/](./seguranca/) |
 | Projeto de voz (Franca Atende + Bina AI) | `O:\DEV\A JORNADA\PROJETOS\voz-agentes` |

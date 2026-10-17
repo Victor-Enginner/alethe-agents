@@ -298,6 +298,7 @@ continua recusado (mesmo teste da verificação de segurança).
 - Papéis (Configurações → Orquestração) escolhem agente, modelo, esforço, somente leitura, orçamento
   e fallback (troca quando a cota passa de 80%). Presets de roteamento: Economia, Equilibrado,
   Desempenho, Personalizado.
-- **Lacuna:** os combos do 9router (e OpenCode/agy/Freebuff) **não** entram como workers. Para
-  isso seria preciso um novo `Launcher` em Rust (ex.: OpenCode headless apontando para o 9router).
-  Candidato a evolução do fork depois da 1ª orquestração.
+- **Atualização 17/10/2026:** `agy` e `opencode` entram como workers "um processo por turno"
+  (`Launcher.one_shot`, ver [PROPOSTA-LAUNCHER.md](./PROPOSTA-LAUNCHER.md)). O OpenCode alcança os
+  combos do 9router (`-m 9router/alethe-rapido`) com a chave injetada só no ambiente do worker.
+  Freebuff continua fora (a CLI não tem modo não interativo).

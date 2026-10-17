@@ -73,3 +73,23 @@ logs, documentos, papers): ~1/3 menos tokens sem perder a resposta. **9router** 
 rápido, e porque é o gateway integrado ao Alethe (combos, OpenCode, topbar).
 **Pendências:** repetir o teste com outros tipos de pedido (código, conversa) e com o Caveman ligado; medir o
 efeito na cota das assinaturas; o LiteLLM (:41000) vira candidato a desligar (DT-06).
+
+<a id="d-008"></a>
+## D-008 — openclaude não entra; OpenCode cobre o mesmo papel (16/10/2026)
+
+**Pedido:** instalar o openclaude (`github.com/Twigpine/openclaude`, npm `@twigpine/openclaude` 0.33.0)
+com modelos grátis do OpenRouter e cadastrar como agente no Alethe.
+**O que a leitura do repositório mostrou** (README, LICENSE, package.json; nada instalado):
+
+- O `LICENSE` diz que o código é **derivado do Claude Code, software proprietário da Anthropic**, e que o
+  projeto **não tem autorização** para distribuí-lo. Usar é risco jurídico e de conta.
+- Na primeira execução o provedor padrão é um gateway de terceiros (`opengateway.gitlawb.com`): prompts e
+  código sairiam do PC para um serviço desconhecido.
+- Credenciais ficam em `.openclaude-profile.json` em texto puro; busca web padrão manda consultas à Exa.
+- O pacote já mudou de dono no npm (`@gitlawb/openclaude` → `@twigpine/openclaude`): risco de cadeia.
+
+**Decisão (proposta ao Victor):** não instalar. O **OpenCode** (MIT, já instalado) já fala com o 9router
+(`9router/alethe-rapido`, com OpenRouter grátis e Groq) e entra como worker barato pela
+[proposta do Launcher](./PROPOSTA-LAUNCHER.md). Se mesmo assim quiser testar: só em sandbox Docker, com
+`CLAUDE_CODE_USE_OPENAI=1` e `OPENAI_BASE_URL=http://127.0.0.1:41010/v1` (9router), chave só por variável
+de ambiente vinda de `.env` fora do Git.
