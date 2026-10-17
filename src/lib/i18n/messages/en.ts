@@ -1810,6 +1810,9 @@ export const en = {
   'term.unrestrictedOn': 'On',
   'term.unrestrictedOff': 'Off',
   'term.alwaysUnrestricted': 'Always start with unrestricted mode',
+  'term.startFromResume': 'Start from {file}',
+  'term.startFromResumeHint':
+    'The agent reads it first and continues from where the last session stopped.',
   'term.runtimeProfile': 'Runtime profile',
   'term.runtimeProfile.full': 'Full',
   'term.runtimeProfile.full.desc':

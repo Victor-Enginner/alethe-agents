@@ -1586,6 +1586,8 @@ export const zhCN: Record<MessageKey, string> = {
   'term.unrestrictedOn': '开',
   'term.unrestrictedOff': '关',
   'term.alwaysUnrestricted': '始终从无限制模式开始',
+  'term.startFromResume': '从 {file} 开始',
+  'term.startFromResumeHint': '智能体先阅读该文件，然后从上次会话停下的地方继续。',
   'term.runtimeProfile': '运行时配置文件',
   'term.runtimeProfile.full': '满',
   'term.runtimeProfile.full.desc': '在每个配置的 MCP 服务器和自定义情况下的正常 CLI 行为。',

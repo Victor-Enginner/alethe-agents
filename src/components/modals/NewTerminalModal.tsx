@@ -17,12 +17,14 @@ import {
   resolveUnrestrictedFlag,
   useAgentTypes,
 } from '../../lib/agentProviders'
+import { RESUME_FILE_NAME, resumeFilePath } from '../../lib/contextWarning'
 import { pickDirectory } from '../../lib/dialog'
 import { useT } from '../../lib/i18n'
 import { basename, pathSegments } from '../../lib/paths'
 import { formatShortcut } from '../../lib/platform'
 import { DEFAULT_GRID_ID } from '../../lib/projectGrids'
 import { router9SupportsAgent } from '../../lib/router9'
+import { readTextFile } from '../../lib/tauri'
 import { isShellAgentType, type AgentRuntimeProfile, type AgentType } from '../../lib/types'
 import { wslTargetFor } from '../../lib/wsl'
 import { enableOrchestratorFeature } from '../../lib/orchestratorUsageAccess'
@@ -86,6 +88,8 @@ export function NewTerminalModal() {
   const [cwd, setCwd] = useState('')
   const [unrestricted, setUnrestricted] = useState<Partial<Record<AgentType, boolean>>>({})
   const [selectedGridId, setSelectedGridId] = useState(UNGROUPED_GRID)
+  const [resumeAvailable, setResumeAvailable] = useState(false)
+  const [startFromResume, setStartFromResume] = useState(false)
 
   const only = context?.only
   const isPlannerContext = context?.titleKey === 'term.newPlannerTitle'
@@ -103,6 +107,24 @@ export function NewTerminalModal() {
     'shell'
   const selectedAgent = allAgents.find((agent) => agent.type === type) ?? allAgents[0]
   const inheritedCwd = useMemo(() => getProjectDefaultCwd(project, projects), [project, projects])
+  const resumeCwd = cwd.trim() || inheritedCwd
+  const offerResume = resumeAvailable && !orchestrating && !isShellAgentType(type)
+
+  // Any agent CLI can start from the folder's RETOMADA.md; offer it only when the file exists.
+  useEffect(() => {
+    if (!open || !resumeCwd) {
+      setResumeAvailable(false)
+      return
+    }
+    let cancelled = false
+    void readTextFile(resumeFilePath(resumeCwd)).then(
+      () => !cancelled && setResumeAvailable(true),
+      () => !cancelled && setResumeAvailable(false),
+    )
+    return () => {
+      cancelled = true
+    }
+  }, [open, resumeCwd])
   const recentFolders = useMemo(() => {
     const folders = new Map<string, { path: string; lastUsedAt: number }>()
     for (const candidate of projects) {
@@ -163,6 +185,7 @@ export function NewTerminalModal() {
     setCreateMore(false)
     setRuntimeProfile('lean')
     setUseRouter9(false)
+    setStartFromResume(false)
     setCwd('')
     setUnrestricted({
       shell: false,
@@ -205,7 +228,12 @@ export function NewTerminalModal() {
         extraArgs,
         runtimeProfile,
         useRouter9: routingAvailable && useRouter9,
-        initialInput: orchestrating && trimmedGoal ? trimmedGoal : undefined,
+        initialInput:
+          orchestrating && trimmedGoal
+            ? trimmedGoal
+            : offerResume && startFromResume
+              ? t('context.resumeBootstrapPrompt', { file: RESUME_FILE_NAME })
+              : undefined,
       },
     }
     // The planner must receive the orchestration MCP config on its first mount. Update the feature
@@ -547,6 +575,17 @@ export function NewTerminalModal() {
                   <span>{t('router9.alwaysRoute')}</span>
                 </label>
               </>
+            ) : null}
+
+            {offerResume ? (
+              <label className={styles.checkboxLine} title={t('term.startFromResumeHint')}>
+                <input
+                  type="checkbox"
+                  checked={startFromResume}
+                  onChange={(event) => setStartFromResume(event.target.checked)}
+                />
+                <span>{t('term.startFromResume', { file: RESUME_FILE_NAME })}</span>
+              </label>
             ) : null}
 
             {!isShellAgentType(type) ? (

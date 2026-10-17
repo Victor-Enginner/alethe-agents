@@ -1838,6 +1838,9 @@ export const ptBR: Record<MessageKey, string> = {
   'term.unrestrictedOn': 'Ativado',
   'term.unrestrictedOff': 'Desativado',
   'term.alwaysUnrestricted': 'Sempre iniciar com o modo irrestrito',
+  'term.startFromResume': 'Começar pelo {file}',
+  'term.startFromResumeHint':
+    'O agente lê o arquivo primeiro e continua de onde a última sessão parou.',
   'term.runtimeProfile': 'Perfil do runtime',
   'term.runtimeProfile.full': 'Completo',
   'term.runtimeProfile.full.desc':
