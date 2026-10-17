@@ -40,6 +40,7 @@ type ModalKind =
   | 'suspendGroup'
   | 'memoryAnalytics'
   | 'aiUsage'
+  | 'tokenBiome'
   | 'themePicker'
   | 'profiles'
   | 'sync'

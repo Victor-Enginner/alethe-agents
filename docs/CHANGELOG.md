@@ -17,6 +17,8 @@ Notable user-facing changes to **Alethe** are documented here. The format is bas
 
 ### Added
 
+- **Token biome.** A 3D brain, opened from the AI usage modal, where each lobe is an agent and the share of lit neurons follows the tokens it spent in the last 14 days. It also lists total, cache share, output and (Codex) reasoning tokens, read from the local Claude Code and Codex transcripts. Antigravity keeps no local token log, so its lobe stays dark. The scene loads on demand, pauses when hidden and respects reduced motion.
+
 - **Delegate to Antigravity (`agy`) and OpenCode, not only Claude and Codex.** Orchestration roles
   can now pick `agy` or `opencode` as the worker, read-only included (agy plan mode, OpenCode's plan
   agent). Each turn runs as its own process and the conversation resumes on the next one, so cheap

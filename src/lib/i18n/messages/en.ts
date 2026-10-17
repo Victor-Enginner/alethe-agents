@@ -1999,6 +1999,30 @@ export const en = {
   'ui.titlebar.codexUsageTooltip': 'Codex: {primary}% in the current window · {secondary}% weekly',
   'ui.titlebar.antigravityUsageTooltip': 'Antigravity: {conversations} active conversations',
   'ui.titlebar.openUsageDetails': 'Open AI usage details',
+  'tokenBiome.open':
+    'Token biome',
+  'tokenBiome.title':
+    'Token biome',
+  'tokenBiome.description':
+    'Each lobe is an agent. The more tokens it spent in the period, the more neurons light up. Drag to rotate.',
+  'tokenBiome.loading':
+    'Reading your transcripts…',
+  'tokenBiome.error':
+    'Could not read the transcripts.',
+  'tokenBiome.period':
+    'Last {days} days',
+  'tokenBiome.noData':
+    'no local data',
+  'tokenBiome.total':
+    'total',
+  'tokenBiome.cacheShare':
+    'served from cache',
+  'tokenBiome.output':
+    'output',
+  'tokenBiome.reasoning':
+    'reasoning (Codex)',
+  'tokenBiome.note':
+    'Read from the Claude Code and Codex transcripts on this PC. Claude Code does not log reasoning separately, so it is counted inside output. Antigravity keeps no local token log, so its lobe stays dark instead of being simulated.',
   'usageModal.title': 'AI usage details',
   'usageModal.description':
     'Current limits, reset windows and account status for your connected coding agents.',

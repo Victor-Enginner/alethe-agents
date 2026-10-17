@@ -1,5 +1,6 @@
 mod activity_stats;
 mod agent_cost;
+mod token_breakdown;
 mod agent_events;
 mod agent_library;
 mod ai_memory;
@@ -515,6 +516,7 @@ pub fn run() {
             agent_cost::get_session_cost,
             agent_cost::get_transcript_cost,
             agent_cost::get_model_pricing,
+            token_breakdown::get_token_breakdown,
             agent_cost::get_opencode_usage_summary,
             crash_watch::get_last_crash_report,
             crash_watch::get_job_guard_status,

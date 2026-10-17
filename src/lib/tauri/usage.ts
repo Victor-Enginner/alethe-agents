@@ -99,6 +99,21 @@ export type ModelRate = {
   cache_read: number
 }
 
+export type TokenTotals = {
+  input: number
+  cache_read: number
+  cache_write: number
+  output: number
+  reasoning: number
+}
+
+export type TokenBreakdown = { days: number; claude: TokenTotals; codex: TokenTotals }
+
+/** Tokens per type for each agent over the last `days` days, read from local transcripts. */
+export async function getTokenBreakdown(days: number): Promise<TokenBreakdown> {
+  return invoke<TokenBreakdown>('get_token_breakdown', { days })
+}
+
 export async function getModelPricing(): Promise<ModelRate[]> {
   return invoke<ModelRate[]>('get_model_pricing')
 }

@@ -97,6 +97,11 @@ const LayoutDesignerModal = lazy(() =>
     default: module.LayoutDesignerModal,
   })),
 )
+const TokenBiomeModal = lazy(() =>
+  import('./components/modals/TokenBiomeModal').then((module) => ({
+    default: module.TokenBiomeModal,
+  })),
+)
 const MemoryAnalyticsModal = lazy(() =>
   import('./components/modals/MemoryAnalyticsModal').then((module) => ({
     default: module.MemoryAnalyticsModal,
@@ -708,6 +713,11 @@ export default function App() {
         <ThemePickerModal />
         <TopbarSettingsModal />
         <AiUsageModal />
+        {openModal === 'tokenBiome' ? (
+          <Suspense fallback={null}>
+            <TokenBiomeModal />
+          </Suspense>
+        ) : null}
         <UpdateModal />
         <WhatsNewModal />
         <RecentChatsModal />

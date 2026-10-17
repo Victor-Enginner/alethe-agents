@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Check, Settings2 } from 'lucide-react'
+import { Brain, Check, Settings2 } from 'lucide-react'
 import { UsageStrip } from '../HomeView/UsageStrip'
 import { getCachedAntigravityUsage } from '../../lib/antigravityUsageCache'
 import { loadClaudeUsage } from '../../lib/claudeUsageCache'
@@ -69,6 +69,7 @@ export function AiUsageModal() {
   const open = useUiStore((state) => state.openModal === 'aiUsage')
   const closeModal = useUiStore((state) => state.closeModal)
   const setCodexUsage = useUiStore((state) => state.setCodexUsage)
+  const openModal = useUiStore((state) => state.openModal_)
   const setAntigravityUsage = useUiStore((state) => state.setAntigravityUsage)
   const claudeAccess = useProjectsStore((state) => state.preferences.usageAccess.claude)
   const codexAccess = useProjectsStore((state) => state.preferences.usageAccess.codex)
@@ -113,6 +114,16 @@ export function AiUsageModal() {
       title={t('usageModal.title')}
       width={width}
       headerAction={
+        <>
+        <button
+          type="button"
+          className={styles.customizeButton}
+          aria-label={t('tokenBiome.open')}
+          title={t('tokenBiome.open')}
+          onClick={() => openModal('tokenBiome')}
+        >
+          <Brain size={15} />
+        </button>
         <button
           type="button"
           className={`${styles.customizeButton} ${editing ? styles.customizeButtonActive : ''}`}
@@ -122,6 +133,7 @@ export function AiUsageModal() {
         >
           <Settings2 size={15} />
         </button>
+        </>
       }
     >
       <p className={styles.description}>{t('usageModal.description')}</p>

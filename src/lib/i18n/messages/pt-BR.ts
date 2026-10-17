@@ -2030,6 +2030,30 @@ export const ptBR: Record<MessageKey, string> = {
   'ui.titlebar.codexUsageTooltip': 'Codex: {primary}% na janela atual · {secondary}% semanal',
   'ui.titlebar.antigravityUsageTooltip': 'Antigravity: {conversations} conversas ativas',
   'ui.titlebar.openUsageDetails': 'Abrir detalhes de uso de IA',
+  'tokenBiome.open':
+    'Biome de tokens',
+  'tokenBiome.title':
+    'Biome de tokens',
+  'tokenBiome.description':
+    'Cada lobo é um agente. Quanto mais tokens ele gastou no período, mais neurônios acesos. Arraste para girar.',
+  'tokenBiome.loading':
+    'Lendo seus transcripts…',
+  'tokenBiome.error':
+    'Não foi possível ler os transcripts.',
+  'tokenBiome.period':
+    'Últimos {days} dias',
+  'tokenBiome.noData':
+    'sem dado local',
+  'tokenBiome.total':
+    'total',
+  'tokenBiome.cacheShare':
+    'vindo do cache',
+  'tokenBiome.output':
+    'saída',
+  'tokenBiome.reasoning':
+    'raciocínio (Codex)',
+  'tokenBiome.note':
+    'Lido dos transcripts do Claude Code e do Codex neste PC. O Claude Code não registra o raciocínio à parte, então ele entra em saída. O Antigravity não guarda log local de tokens, então o lobo fica apagado em vez de simulado.',
   'usageModal.title': 'Detalhes de uso de IA',
   'usageModal.description':
     'Limites atuais, janelas de reset e status da conta dos seus agentes de código conectados.',

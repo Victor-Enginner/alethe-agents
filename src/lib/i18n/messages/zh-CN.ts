@@ -1766,6 +1766,30 @@ export const zhCN: Record<MessageKey, string> = {
   'ui.titlebar.codexUsageTooltip': '代码本：当前窗口 {primary}% · 周 {secondary}%',
   'ui.titlebar.antigravityUsageTooltip': 'Antigravity：{conversations} 活跃对话',
   'ui.titlebar.openUsageDetails': 'Open AI 使用详情',
+  'tokenBiome.open':
+    '令牌生态',
+  'tokenBiome.title':
+    '令牌生态',
+  'tokenBiome.description':
+    '每个脑叶代表一个代理。该时段消耗的令牌越多，点亮的神经元越多。拖动可旋转。',
+  'tokenBiome.loading':
+    '正在读取对话记录…',
+  'tokenBiome.error':
+    '无法读取对话记录。',
+  'tokenBiome.period':
+    '最近 {days} 天',
+  'tokenBiome.noData':
+    '无本地数据',
+  'tokenBiome.total':
+    '总计',
+  'tokenBiome.cacheShare':
+    '来自缓存',
+  'tokenBiome.output':
+    '输出',
+  'tokenBiome.reasoning':
+    '推理（Codex）',
+  'tokenBiome.note':
+    '读取自本机的 Claude Code 和 Codex 对话记录。Claude Code 不单独记录推理，因此计入输出。Antigravity 没有本地令牌日志，所以其脑叶保持暗色而不是模拟数据。',
   'usageModal.title': '人工智能使用详情',
   'usageModal.description': '当前限制、重置窗口和您已连接编码代理的账户状态。',
   'usageModal.customize': '自定义物品',
