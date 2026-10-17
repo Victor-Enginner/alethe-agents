@@ -117,6 +117,8 @@ Registro de tudo que muda em relação ao original. Cada mudança entra aqui e n
 | 14/10/2026 | **Marco 0** salvo (tag `marco-0-2026-10-14` + backup). Projeto movido para pasta própria. Criada `docs/fork/` com roadmap em fases, diário, decisões e marcos | `8fd42f4` |
 | 16/10/2026 | Botões na topbar para abrir os painéis do 9router e do OmniRoute (`src/lib/gateways.ts`, `TitleBar`), com i18n e CHANGELOG | *este commit* |
 | 15/10/2026 | Guia de arquitetura em português ([docs/fork/ARQUITETURA.md](./docs/fork/ARQUITETURA.md)): duas metades Tauri, fluxo do PTY, orquestrador, estado, mapa de pastas e trilha de estudo | `31a5e4f` |
+| 17/10/2026 | **Token biome**: cérebro 3D opcional, aberto pelo modal de uso, com um lobo por agente e neurônios acesos conforme os tokens reais dos últimos 14 dias (`token_breakdown.rs`, `TokenBiomeModal`) | `8939d34` |
+| 17/10/2026 | Cartões de uso da Home mostram "carregando" até a primeira leitura, sem gráfico de atividade duplicado | `e44d6c9` |
 | 15/10/2026 | Plano **100 dias** ([TAREFAS.md](./docs/fork/TAREFAS.md)), pesquisa de provedores e orquestradores ([PROVEDORES.md](./docs/fork/PROVEDORES.md)), dívidas técnicas e diagramas draw.io + Excalidraw | *este commit* |
 
 ## Roadmap
@@ -150,6 +152,6 @@ git merge upstream/main
 
 ## Créditos e licença
 
-- Projeto original: **[Alethe](https://github.com/Kc1t/alethe-agents)**, de Kauã Miguel e contribuidores.
+- Projeto original: **[Alethe](https://github.com/Kc1t/alethe-agents)**, criado por **Kauã Miguel** ([@Kc1t](https://github.com/Kc1t)) e contribuidores. Todo o app, a arquitetura e o design sobre os quais este fork trabalha são obra dele; as mudanças daqui são feitas em cima do que ele construiu, e o crédito do projeto continua sendo dele.
 - Código sob **AGPL-3.0-or-later** ([LICENSE](./LICENSE)). Este fork mantém a mesma licença, e qualquer versão distribuída precisa publicar o código-fonte.
 - A marca "Alethe" não é licenciada por este fork ([TRADEMARK.md](./TRADEMARK.md)).
