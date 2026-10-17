@@ -380,15 +380,17 @@ export function TitleBar() {
     if (!usageAccess.claude) return
     let cancelled = false
     let interval: number | null = null
-    const tick = async () => {
-      if (!activeRef.current) return
+    // The first read ignores window focus so the cards fill in on open; later ticks wait for focus.
+    const tick = async (first = false) => {
+      if (!first && !activeRef.current) return
       const usage = await loadClaudeUsage()
+      useUiStore.getState().markUsagePolled('claude')
       if (usage && !cancelled) observeClaudeReset(usage)
     }
     const startupDelay = window.setTimeout(() => {
-      void tick()
-      interval = window.setInterval(tick, CLAUDE_POLL_INTERVAL_MS)
-    }, 1500)
+      void tick(true)
+      interval = window.setInterval(() => void tick(), CLAUDE_POLL_INTERVAL_MS)
+    }, 400)
     return () => {
       cancelled = true
       window.clearTimeout(startupDelay)
@@ -401,8 +403,8 @@ export function TitleBar() {
     let cancelled = false
     let interval: number | null = null
     let consecutiveFailures = 0
-    const tick = async () => {
-      if (!activeRef.current) return
+    const tick = async (first = false) => {
+      if (!first && !activeRef.current) return
       try {
         const usage = await getCachedCodexUsage()
         if (!cancelled) {
@@ -415,12 +417,14 @@ export function TitleBar() {
         if (consecutiveFailures >= 3 && !cancelled) {
           setCodexUsage(null)
         }
+      } finally {
+        useUiStore.getState().markUsagePolled('codex')
       }
     }
     const startupDelay = window.setTimeout(() => {
-      void tick()
-      interval = window.setInterval(tick, CLAUDE_POLL_INTERVAL_MS)
-    }, 2500)
+      void tick(true)
+      interval = window.setInterval(() => void tick(), CLAUDE_POLL_INTERVAL_MS)
+    }, 800)
     return () => {
       cancelled = true
       window.clearTimeout(startupDelay)
@@ -432,8 +436,8 @@ export function TitleBar() {
     if (!usageAccess.antigravity) return
     let cancelled = false
     let interval: number | null = null
-    const tick = async () => {
-      if (!activeRef.current) return
+    const tick = async (first = false) => {
+      if (!first && !activeRef.current) return
       try {
         const usage = await getCachedAntigravityUsage()
         if (!cancelled) {
@@ -443,12 +447,14 @@ export function TitleBar() {
         if (!cancelled) {
           setAntigravityUsage(null)
         }
+      } finally {
+        useUiStore.getState().markUsagePolled('antigravity')
       }
     }
     const startupDelay = window.setTimeout(() => {
-      void tick()
-      interval = window.setInterval(tick, CLAUDE_POLL_INTERVAL_MS)
-    }, 3000)
+      void tick(true)
+      interval = window.setInterval(() => void tick(), CLAUDE_POLL_INTERVAL_MS)
+    }, 1200)
     return () => {
       cancelled = true
       window.clearTimeout(startupDelay)

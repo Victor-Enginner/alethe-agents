@@ -507,7 +507,7 @@ export function HomeView() {
 
       <section className={styles.section}>
         <div className={styles.sectionHeader}>{t('home.usageActivity')}</div>
-        <UsageStrip />
+        <UsageStrip showActivity={false} />
       </section>
 
       <section className={`${styles.section} ${styles.timeAnalyticsSection}`}>

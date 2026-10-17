@@ -271,9 +271,23 @@ function StatCell({ label, value, crit }: { label: string; value: string; crit?:
   )
 }
 
+/** Placeholder shown until a provider's first usage read finishes, so a slow start never reads as "not connected". */
+function UsageLoadingCard({ head }: { head: ReactNode }) {
+  const t = useT()
+  return (
+    <div className={styles.usageCard}>
+      {head}
+      <div className={styles.usageEmpty}>
+        <span className={styles.usageEmptyHint}>{t('widget.loading')}</span>
+      </div>
+    </div>
+  )
+}
+
 function ClaudeCard({ usage }: { usage: ClaudeUsage | null }) {
   const t = useT()
   const usageError = useUiStore((s) => s.claudeUsageError)
+  const polled = useUiStore((s) => s.usagePolled.claude)
   const accent = 'var(--agent-claude)'
 
   const head = (
@@ -288,6 +302,8 @@ function ClaudeCard({ usage }: { usage: ClaudeUsage | null }) {
       onRefresh={refreshClaude}
     />
   )
+
+  if (!usage && !polled) return <UsageLoadingCard head={head} />
 
   if (!usage) {
     const unavailable = usageError === 'unavailable'
@@ -404,6 +420,7 @@ function CodexCard({
   const t = useT()
   const openModal = useUiStore((s) => s.openModal_)
   const accent = 'var(--agent-codex)'
+  const polled = useUiStore((s) => s.usagePolled.codex)
 
   const head = (
     <CardHead
@@ -416,6 +433,8 @@ function CodexCard({
       onRefresh={refreshCodex}
     />
   )
+
+  if (!usage && !polled) return <UsageLoadingCard head={head} />
 
   if (!usage) {
     return (
@@ -514,6 +533,7 @@ function CodexCard({
 function AntigravityCard({ usage }: { usage: AntigravityUsage | null }) {
   const t = useT()
   const accent = 'var(--agent-antigravity)'
+  const polled = useUiStore((s) => s.usagePolled.antigravity)
 
   const hasData = usage?.status === 'ready' && usage.buckets.length > 0
   const head = (
@@ -527,6 +547,8 @@ function AntigravityCard({ usage }: { usage: AntigravityUsage | null }) {
       onRefresh={refreshAntigravity}
     />
   )
+
+  if (!usage && !polled) return <UsageLoadingCard head={head} />
 
   if (!usage || !hasData) {
     const emptyTitle =

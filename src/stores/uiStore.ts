@@ -94,6 +94,9 @@ type UiState = {
   memoryStats: MemoryStats | null
   runtimeSnapshot: RuntimeSnapshot | null
   memoryHistory: MemorySample[]
+  /** True once the first usage read of a provider has finished, so the cards can tell "loading" from "not connected". */
+  usagePolled: Record<'claude' | 'codex' | 'antigravity', boolean>
+  markUsagePolled: (provider: 'claude' | 'codex' | 'antigravity') => void
   claudeUsage: ClaudeUsage | null
   /** Why the last Claude usage read failed; null after a successful one. */
   claudeUsageError: 'no_token' | 'unavailable' | null
@@ -216,6 +219,9 @@ export const useUiStore = create<UiState>((set) => ({
   memoryStats: null,
   runtimeSnapshot: null,
   memoryHistory: [],
+  usagePolled: { claude: false, codex: false, antigravity: false },
+  markUsagePolled: (provider) =>
+    set((s) => (s.usagePolled[provider] ? s : { usagePolled: { ...s.usagePolled, [provider]: true } })),
   claudeUsage: null,
   claudeUsageError: null,
   codexUsage: null,

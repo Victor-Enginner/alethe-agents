@@ -10,6 +10,11 @@ Notable user-facing changes to **Alethe** are documented here. The format is bas
 
 ## [Unreleased]
 
+### Fixed
+
+- Home usage cards no longer show "no token" / "not signed in" while the first read is still running: they show "loading" and the first read now runs shortly after launch even when the window is not focused.
+- Home no longer renders the activity graph twice, and the Antigravity usage card now appears next to Claude and Codex.
+
 ### Added
 
 - **Delegate to Antigravity (`agy`) and OpenCode, not only Claude and Codex.** Orchestration roles
